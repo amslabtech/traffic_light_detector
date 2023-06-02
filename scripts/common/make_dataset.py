@@ -10,6 +10,7 @@ parser = argparse.ArgumentParser(description="Create train.txt, validation.txt a
                                  usage="> python3 createTrainValidationTest.py -s <path_to_yolo_dataset>",
                                  epilog="2021 Tetsuaki BABA")
 parser.add_argument("-s", "--search_path", type=str,
+                    default="../../dataset/",
                     help="set a jpg/txt search path")
 args = parser.parse_args()
 
