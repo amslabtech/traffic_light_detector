@@ -9,10 +9,7 @@ from PIL import  Image
 
 def create_xml(txt_path, object_number):
 
-    #保存フォルダへ移動
-    # os.chdir('../../dataset/converted_to_xml')
     xml_path = txt_path.replace('.txt', '.xml')
-    # xml_path = os.path.join(dataset_root, 'converted_to_xml', xml_file)
 
     #xmlファイルを生成する
     annotation = ET.Element('annotation')
@@ -40,12 +37,7 @@ def create_xml(txt_path, object_number):
         ymax = ET.SubElement(bndbox, 'ymax')
 
     tree = ET.ElementTree(annotation)
-    # fl = file_name
     tree.write(xml_path)
-
-    # os.chdir('../../scripts/common')
-
-    
 
     return xml_path
 
@@ -79,10 +71,6 @@ def add_object(name):
     return fl
 
 def read_txt(xml_path, txt_path):
-    # txt_path = os.path.join('anottation_data/', name)
-    # txt_path = os.path.join(dataset_root, "vidvipo_full_2023_05_27", name)
-    # xml_path = os.path.join(dataset_root, "converted_to_xml", name)
-    # xml_path.replace('.txt', '.xml')
 
     with open(txt_path) as f:
         l_strip = [s.strip() for s in f.readlines()]
@@ -91,7 +79,6 @@ def read_txt(xml_path, txt_path):
         #print(len(l_strip))
         #物体が２つ以上ならxmlファイルを書き換える
         if len(l_strip) != '1':
-            # xml_name = name.replace('.txt', '.xml')
             create_xml(xml_path, len(l_strip))
         #print(l_strip)
         #txtデータ読み込み
@@ -249,36 +236,15 @@ def yolo_to_xml(xml_path, txt_path, data, object_counter):
 
 
 if __name__ == "__main__":
-
-    #txtデータの名前のリストを保存する
-    # path = os.listdir('./anottation_data')
     
-    #xmlファイルを生成してtxtファイルの内容を書き込む
     dataset_root = '../../dataset'
+    #txtデータの名前のリストを保存する
     path = glob.glob(os.path.join(dataset_root, 'vidvipo_full_2023_05_27/*.txt'))
+
+    #xmlファイルを生成してtxtファイルの内容を書き込む
     for txt_path in path:
-        # print(txt_path)
+        #空のxmlファイルを作成
         xml_path = create_xml(txt_path, 1)
+        #txtファイルの内容を読む
         read_txt(xml_path, txt_path)
-        
-    # txt_path = os.path.join(dataset_root, "vidvipo_full_2023_05_27", path)
-    # xml_name = path.replace('.txt', '.xml')
-    # xml_path = create_xml(txt_path, 1)
-    # read_txt(xml_path, txt_path)
-
-    # xmlファイル生成
-    # for i, name in enumerate(path):
-        # name = name.replace('.txt', '.xml')
-    #     create_xml(name, 1)
-    #     read_txt(path[i])
-
-
-
-#     import glob
  
-# path = './dir/*.txt'
- 
-# list1 = glob.glob(path);
- 
-# print(list1)
-
