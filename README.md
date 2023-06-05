@@ -1,4 +1,4 @@
-# signal_detector
+# traffic light detector
 
 # データセットのダウンロード
 ```
