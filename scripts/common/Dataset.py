@@ -13,21 +13,22 @@ import numpy as np
 import torch
 import torch.utils.data as data
 import pandas as pd
+import sys
+
 
 from utils.data_augumentation import Compose, ConvertFromInts, ToAbsoluteCoords, PhotometricDistort, Expand, RandomSampleCrop, RandomMirror, ToPercentCoords, Resize, SubtractMeans
-
 
 # 学習、検証の画像データとアノテーションデータへのファイルパスリストを作成する
 
 
-def make_datapath_list():
+def make_datapath_list(rootdir):
     
     #データへのパスを格納したリストを作成する
 
 
     # 訓練と検証、それぞれのファイルのID（ファイル名）を取得する
-    train_id_names = 'train.txt'
-    val_id_names = 'validation.txt'
+    train_id_names = osp.join(rootdir, 'train.txt')
+    val_id_names = osp.join(rootdir, 'validation.txt')
 
     # 訓練データの画像ファイルとアノテーションファイルへのパスリストを作成
     train_img_list = list()
@@ -253,7 +254,8 @@ def od_collate_fn(batch):
 
 if __name__=='__main__':
 
-    train_img_list, train_anno_list, val_img_list, val_anno_list = make_datapath_list()
+    root_dir="."
+    train_img_list, train_anno_list, val_img_list, val_anno_list = make_datapath_list(root_dir)
 
     #class情報のリスト作成
     classes=[]
@@ -340,5 +342,7 @@ if __name__=='__main__':
     print(images.size())  # torch.Size([4, 3, 300, 300])
     print(len(targets))
     print(targets[1].size())  # ミニバッチのサイズのリスト、各要素は[n, 5]、nは物体数
+    print(train_dataset.__len__())
+    print(val_dataset.__len__())
 
 
