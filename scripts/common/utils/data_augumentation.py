@@ -241,9 +241,11 @@ class RandomSampleCrop(object):
 
     def __call__(self, image, boxes=None, labels=None):
         height, width, _ = image.shape
+        
         while True:
             # randomly choose a mode
-            mode = random.choice(self.sample_options)
+            ndarray = np.array(self.sample_options, dtype=object)
+            mode = random.choice(ndarray)
             if mode is None:
                 return image, boxes, labels
 

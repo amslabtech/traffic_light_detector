@@ -14,6 +14,7 @@ import torch
 import torch.utils.data as data
 import pandas as pd
 import sys
+sys.path.append('../')
 
 
 from utils.data_augumentation import Compose, ConvertFromInts, ToAbsoluteCoords, PhotometricDistort, Expand, RandomSampleCrop, RandomMirror, ToPercentCoords, Resize, SubtractMeans
@@ -34,12 +35,15 @@ def make_datapath_list(rootdir):
     train_img_list = list()
     train_anno_list = list()
 
+    i=0
     for line in open(train_id_names):
-        # file_id = line.strip()  # 空白スペースと改行を除去
-        img_path = line.strip()
-        anno_path = img_path.replace('.jpg', '.xml') # アノテーションのパス
+        file_id = line.strip()
+        img_path = osp.join(rootdir, 'vidvipo_full_2023_05_27', file_id)
+        anno_path = osp.join(rootdir, 'xml_annotations', file_id.replace('.jpg', '.xml')) # アノテーションのパス
         train_img_list.append(img_path)  # リストに追加
         train_anno_list.append(anno_path)  # リストに追加
+
+
 
     # 検証データの画像ファイルとアノテーションファイルへのパスリストを作成
     val_img_list = list()
@@ -47,8 +51,9 @@ def make_datapath_list(rootdir):
 
     for line in open(val_id_names):
         # file_id = line.strip()  # 空白スペースと改行を除去
-        img_path = line.strip()
-        anno_path = img_path.replace('.jpg', '.xml') # アノテーションのパス
+        file_id = line.strip()
+        img_path = osp.join(rootdir, 'vidvipo_full_2023_05_27', file_id)
+        anno_path = osp.join(rootdir, 'xml_annotations', file_id.replace('.jpg', '.xml')) # アノテーションのパス
         val_img_list.append(img_path)  # リストに追加
         val_anno_list.append(anno_path)  # リストに追加
 
@@ -108,7 +113,11 @@ class Anno_xml2list(object):
                 bndbox.append(cur_pixel)
 
             # アノテーションのクラス名のindexを取得して追加
-            label_idx = self.classes.index(name)
+            if name in self.classes:
+                label_idx = self.classes.index(name)
+            else:
+                print("ERROR!:", name)
+                break;
             bndbox.append(label_idx)
 
             # resに[xmin, ymin, xmax, ymax, label_ind]を足す
@@ -193,24 +202,42 @@ class Dataset(data.Dataset):
         '''
         前処理をした画像のテンソル形式のデータとアノテーションを取得
         '''
-        im, gt, h, w = self.pull_item(index)
-        return im, gt
+        # im, gt, h, w = self.pull_item(index)
+        # return im, gt
+
+    
+        try:
+            im, gt, h, w = self.pull_item(index)
+            return im, gt
+        except Exception as e:
+            print(f"An error occurred while processing item {index}: {str(e)}")
+
+            idx = random.randint(0, 555)
+            im, gt, h, w = self.pull_item(idx)
+            return im, gt
+       
 
     def pull_item(self, index):
         '''前処理をした画像のテンソル形式のデータ、アノテーション、画像の高さ、幅を取得する'''
 
         # 1. 画像読み込み
         image_file_path = self.img_list[index]
+        # print(image_file_path)
+        # print(osp.exists(image_file_path))
         img = cv2.imread(image_file_path)  # [高さ][幅][色BGR]
         height, width, channels = img.shape  # 画像のサイズを取得
+
 
         # 2. xml形式のアノテーション情報をリストに
         anno_file_path = self.anno_list[index]
         anno_list = self.transform_anno(anno_file_path, width, height)
 
+
         # 3. 前処理を実施
+        #(img, phase, boxes, labels)が引数
         img, boxes, labels = self.transform(
             img, self.phase, anno_list[:, :4], anno_list[:, 4])
+        
 
         # 色チャネルの順番がBGRになっているので、RGBに順番変更
         # さらに（高さ、幅、色チャネル）の順を（色チャネル、高さ、幅）に変換
@@ -218,6 +245,7 @@ class Dataset(data.Dataset):
 
         # BBoxとラベルをセットにしたnp.arrayを作成、変数名「gt」はground truth（答え）の略称
         gt = np.hstack((boxes, np.expand_dims(labels, axis=1)))
+
 
         return img, gt, height, width
 
@@ -254,62 +282,61 @@ def od_collate_fn(batch):
 
 if __name__=='__main__':
 
-    root_dir="."
-    train_img_list, train_anno_list, val_img_list, val_anno_list = make_datapath_list(root_dir)
+    dataset_root="../../dataset"
+    train_img_list, train_anno_list, val_img_list, val_anno_list = make_datapath_list(dataset_root)
 
     #class情報のリスト作成
     classes=[]
     class_info=pd.read_csv('../../dataset/annotations.csv').values.tolist()
-
     for line in class_info[:-2]:
         classes.append(line[1])
 
     transform_anno = Anno_xml2list(classes)
 
-    # # 画像の読み込み OpenCVを使用
-    # ind = 1
-    # image_file_path = val_img_list[ind]
+    # 画像の読み込み OpenCVを使用
+    ind = 1
+    image_file_path = val_img_list[ind]
 
-    # img = cv2.imread(image_file_path)  # [高さ][幅][色BGR]
-    # height, width, channels = img.shape  # 画像のサイズを取得
+    img = cv2.imread(image_file_path)  # [高さ][幅][色BGR]
+    height, width, channels = img.shape  # 画像のサイズを取得
 
-    # #アノテーションをリストで表示
-    # print(transform_anno(val_anno_list[ind], width, height))
+    #アノテーションをリストで表示
+    print(transform_anno(val_anno_list[ind], width, height))
 
-    # # 動作の確認
+    # 動作の確認
 
-    # # 1. 画像読み込み
-    # image_file_path = train_img_list[0]
-    # img = cv2.imread(image_file_path)  # [高さ][幅][色BGR]
-    # height, width, channels = img.shape  # 画像のサイズを取得
+    # 1. 画像読み込み
+    image_file_path = train_img_list[0]
+    img = cv2.imread(image_file_path)  # [高さ][幅][色BGR]
+    height, width, channels = img.shape  # 画像のサイズを取得
 
-    # # 2. アノテーションをリストに
-    # transform_anno = Anno_xml2list(classes)
-    # anno_list = transform_anno(train_anno_list[0], width, height)
+    # 2. アノテーションをリストに
+    transform_anno = Anno_xml2list(classes)
+    anno_list = transform_anno(train_anno_list[0], width, height)
 
-    # # 3. 元画像の表示
-    # plt.imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
-    # plt.show()
+    # 3. 元画像の表示
+    plt.imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+    plt.show()
 
-    # # 4. 前処理クラスの作成
-    # color_mean = (104, 117, 123)  # (BGR)の色の平均値
-    # input_size = 300  # 画像のinputサイズを300×300にする
-    # transform = DataTransform(input_size, color_mean)
+    # 4. 前処理クラスの作成
+    color_mean = (104, 117, 123)  # (BGR)の色の平均値
+    input_size = 300  # 画像のinputサイズを300×300にする
+    transform = DataTransform(input_size, color_mean)
 
-    # # 5. train画像の表示
-    # phase = "train"
-    # img_transformed, boxes, labels = transform(
-    # img, phase, anno_list[:, :4], anno_list[:, 4])
-    # plt.imshow(cv2.cvtColor(img_transformed, cv2.COLOR_BGR2RGB))
-    # plt.show()
+    # 5. train画像の表示
+    phase = "train"
+    img_transformed, boxes, labels = transform(
+    img, phase, anno_list[:, :4], anno_list[:, 4])
+    plt.imshow(cv2.cvtColor(img_transformed, cv2.COLOR_BGR2RGB))
+    plt.show()
 
 
-    # # 6. val画像の表示
-    # phase = "val"
-    # img_transformed, boxes, labels = transform(
-    # img, phase, anno_list[:, :4], anno_list[:, 4])
-    # plt.imshow(cv2.cvtColor(img_transformed, cv2.COLOR_BGR2RGB))
-    # plt.show()
+    # 6. val画像の表示
+    phase = "val"
+    img_transformed, boxes, labels = transform(
+    img, phase, anno_list[:, :4], anno_list[:, 4])
+    plt.imshow(cv2.cvtColor(img_transformed, cv2.COLOR_BGR2RGB))
+    plt.show()
 
     color_mean = (104, 117, 123)  # (BGR)の色の平均値
     input_size = 300  # 画像のinputサイズを300×300にする
