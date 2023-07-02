@@ -4,6 +4,7 @@ import xml.dom.minidom as md
 import os
 import numpy as np
 import glob
+import pandas as pd
 
 from PIL import  Image
 
@@ -41,34 +42,6 @@ def create_xml(txt_path, object_number):
 
     return xml_path
 
-def add_object(name):
-
-    os.chdir('./converted_to_xml')
-    xml_name = name.replace('txt', 'xml')
-
-    # xmlに新たな物体情報を追加する
-    tree = ET.parse(xml_name)
-    root = tree.getroot()
-
-    for annotation in root.findall('object'):
-        object = ET.SubElement(annotation, 'object')
-        name = ET.SubElement(object, 'name')
-        pose = ET.SubElement(object, 'pose')
-        truncated = ET.SubElement(object, 'truncated')
-        difficult = ET.SubElement(object, 'difficult')
-        bndbox = ET.SubElement(object, 'bndbox')
-        xmin = ET.SubElement(bndbox, 'xmin')
-        ymin = ET.SubElement(bndbox, 'ymin')
-        xmax = ET.SubElement(bndbox, 'xmax')
-        ymax = ET.SubElement(bndbox, 'ymax')
-
-    tree = ET.ElementTree(root)
-    fl = xml_name
-    tree.write(fl)
-
-    os.chdir('../')
-
-    return fl
 
 def read_txt(xml_path, txt_path):
 
@@ -234,12 +207,28 @@ def yolo_to_xml(xml_path, txt_path, data, object_counter):
 
     # return data
 
+def convert_yolo_to_xml(yolo_file, xml_file):
+    with open(yolo_file, 'r') as file:
+        lines = file.readlines()
+
+    root=ET.Element('annotation')
+
+    folder=ET.SubElement(root, 'folder')
+    folder.text='dataset'
+
 
 if __name__ == "__main__":
     
     dataset_root = '../../dataset'
     #txtデータの名前のリストを保存する
     path = glob.glob(os.path.join(dataset_root, 'vidvipo_full_2023_05_27/*.txt'))
+
+    classes=[]
+    class_info=pd.read_csv('../../dataset/annotations.csv').values.tolist()
+
+    for line in class_info[:-2]:
+        classes.append(line[1])
+        # print(line[1], line[0])
 
     #xmlファイルを生成してtxtファイルの内容を書き込む
     for txt_path in path:
