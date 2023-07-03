@@ -8,6 +8,9 @@ python3 download_dataset.py  #データセット(VIDVIP)のダウンロード
 python3 createTrainValTest.py -s dataset/vidvipo_full_2023_05_27/
 
 ```
+
+### dataset info
+[VIDVIP](https://tetsuakibaba.jp/project/vidvip/)
   
 # yolo形式のデータセットをxml形式に変換する
 # 重みの初期値のダウンロード
