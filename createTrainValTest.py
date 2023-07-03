@@ -21,9 +21,9 @@ count_validation_files = 0
 if(args.search_path):
     allfiles = glob.glob(args.search_path+'/**/*.jpg', recursive=True)
     print("Total Files: "+str(len(allfiles)))
-    file_train = open('train.txt', 'w')
-    file_test = open('test.txt', 'w')
-    file_validation = open('validation.txt', 'w')
+    file_train = open('dataset/train.txt', 'w')
+    file_test = open('dataset/test.txt', 'w')
+    file_validation = open('dataset/validation.txt', 'w')
     for file in allfiles:
         random_number = random.random();
         if random_number < 0.03:
