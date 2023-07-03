@@ -1,6 +1,6 @@
 # traffic light detector
 
-### installation
+## installation
 ```
 git clone git@github.com:YoshikiMaekawa2000/traffic_light_detector.git
 cd traffic_light_detector
@@ -10,10 +10,13 @@ python3 yolo2xml.py
 
 ```
 
-### dataset info
+## dataset info
 [VIDVIP](https://tetsuakibaba.jp/project/vidvip/)
+
+## train
+### Use darknet
+
   
-# yolo形式のデータセットをxml形式に変換する
 # 重みの初期値のダウンロード
 # python3 setup.py install
 
