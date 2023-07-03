@@ -100,17 +100,17 @@ def convert_dataset(yolo_dataset_dir, xml_dataset_dir, class_names):
 if __name__ == "__main__":
 
     class_names={}
-    class_info=pd.read_csv('../../dataset/annotations.csv').values.tolist()
+    class_info=pd.read_csv('dataset/annotations.csv').values.tolist()
 
     for line in class_info[:-2]:
         class_names.update({line[0]: line[1]})
 
-    
-    dataset_root = '../../dataset'
+
+    dataset_root = 'dataset'
     #txtデータの名前のリストを保存する
     path = glob.glob(os.path.join(dataset_root, 'vidvipo_full_2023_05_27/*.txt'))
 
-        
+
 yolo_dataset_dir = os.path.join(dataset_root, 'vidvipo_full_2023_05_27')
 xml_dataset_dir = os.path.join(dataset_root, 'xml_annotations')
 
