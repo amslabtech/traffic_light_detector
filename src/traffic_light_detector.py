@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 import rospy
+import os
 from sensor_msgs.msg import CompressedImage, Image
 from cv_bridge import CvBridge
 from ultralytics import YOLO
@@ -10,7 +11,8 @@ class TrafficlightDetector:
         rospy.init_node(self.node_name)
 
         # self.model=YOLO("yolov8n.pt")
-        self.model=YOLO("/home/amsl/weights/trafficc_light/vidvip_yolov8n_2023-05-19.pt")
+        pwd=os.getcwd()
+        self.model=YOLO(os.path.join(pwd[:-3], "weights", "vidvip_yolov8n_2023-05-19.pt"))
 
         image_sub = rospy.Subscriber('/CompressedImage', CompressedImage, self.image_callback)
         self.pub = rospy.Publisher('/yolo_result', Image, queue_size=10)
