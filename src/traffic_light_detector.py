@@ -14,7 +14,8 @@ class TrafficlightDetector:
         pwd=os.getcwd()
         self.model=YOLO(os.path.join(pwd[:-3], "weights", "vidvip_yolov8n_2023-05-19.pt"))
 
-        image_sub = rospy.Subscriber('/CompressedImage', CompressedImage, self.image_callback)
+        # image_sub = rospy.Subscriber('/CompressedImage', CompressedImage, self.image_callback)
+        image_sub = rospy.Subscriber('/grass_cam/image_raw/compressed', CompressedImage, self.image_callback)
         self.pub = rospy.Publisher('/yolo_result', Image, queue_size=10)
 
 
