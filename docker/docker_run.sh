@@ -1,5 +1,9 @@
-mage_name="integrated_attitude_estimator"
+image_name="traffic_light_detector"
 tag_name="noetic"
-script_dir=$(cd $(dirname $0); pwd)
 
-docker run -it --net=host --gpus=all --env="DISPLAY" --name="traffic_light_detector" $image_name:$tag_name bash
+docker run -it \
+    --network=host \
+    --gpus all \
+    --name "traffic_light_detector" \
+    $image_name:$tag_name \
+    bash
