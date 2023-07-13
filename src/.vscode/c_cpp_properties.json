@@ -1,0 +1,29 @@
+{
+  "configurations": [
+    {
+      "browse": {
+        "databaseFilename": "${default}",
+        "limitSymbolsToIncludedHeaders": false
+      },
+      "includePath": [
+        "/home/amsl/catkin_ws/devel/include/**",
+        "/opt/ros/noetic/include/**",
+        "/home/amsl/catkin_ws/src/angle_from_imu/include/**",
+        "/home/amsl/catkin_ws/src/dji_rs3pro_ros_controller/ros_canopen/canopen_402/include/**",
+        "/home/amsl/catkin_ws/src/dji_rs3pro_ros_controller/ros_canopen/canopen_chain_node/include/**",
+        "/home/amsl/catkin_ws/src/dji_rs3pro_ros_controller/ros_canopen/canopen_master/include/**",
+        "/home/amsl/catkin_ws/src/dji_rs3pro_ros_controller/ros_canopen/canopen_motor_node/include/**",
+        "/home/amsl/catkin_ws/src/integrated_attitude_estimator/include/**",
+        "/home/amsl/catkin_ws/src/dji_rs3pro_ros_controller/ros_canopen/socketcan_bridge/include/**",
+        "/home/amsl/catkin_ws/src/dji_rs3pro_ros_controller/ros_canopen/socketcan_interface/include/**",
+        "/usr/include/**"
+      ],
+      "name": "ROS",
+      "intelliSenseMode": "gcc-x64",
+      "compilerPath": "/usr/bin/gcc",
+      "cStandard": "gnu11",
+      "cppStandard": "c++14"
+    }
+  ],
+  "version": 4
+}
