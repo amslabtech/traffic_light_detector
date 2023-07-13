@@ -62,6 +62,7 @@ RUN pip3 install torch \
                 ttach \
                 grad-cam==1.2.9 \
                 tensorboardX
+RUN pip install ultralytics
 
 ######### ROS Noetic insatall ##########
 ## NOTE: "lsb_release" -> "lsb-release"
@@ -122,7 +123,7 @@ RUN cd /home/ros_catkin_ws && \
 #     mkdir -p /home/bagfiles
 
 RUN cd /home/ros_catkin_ws/src && \
-    git clone https://github.com/YoshikiMaekawa2000/traffic_light_detector.git   && \
+    git clone -b yolov8n https://github.com/YoshikiMaekawa2000/traffic_light_detector.git   && \
     cd /home/ros_catkin_ws && \
     /bin/bash -c "source /opt/ros/noetic/setup.bash; catkin_make; source devel/setup.bash"
 
