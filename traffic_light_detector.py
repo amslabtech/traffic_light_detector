@@ -2,6 +2,7 @@
 import rospy
 import os
 from sensor_msgs.msg import CompressedImage, Image
+from std_msgs.msg import Bool
 from cv_bridge import CvBridge
 from ultralytics import YOLO
 
@@ -12,12 +13,13 @@ class TrafficlightDetector:
 
         # self.model=YOLO("yolov8n.pt")
         pwd=os.getcwd()
-
-
         self.model=YOLO(os.path.join( "weights", "vidvip_yolov8n_2023-05-19.pt"))
 
         image_sub = rospy.Subscriber('/CompressedImage', CompressedImage, self.image_callback)
-        self.pub = rospy.Publisher('/yolo_result', Image, queue_size=10)
+        self.pub_img = rospy.Publisher('/yolo_result', Image, queue_size=10)
+        self.pub_flag = rospy.Publisher('/signal_blue', Bool, queue_size=1)
+
+        self.count_red = 0
 
     def image_callback(self, msg):
         bridge = CvBridge()
@@ -28,12 +30,22 @@ class TrafficlightDetector:
         for box in infer_result[0].boxes:
             if(int(box.cls.item()) == 15):
                 print("\033[31m#########################\n#######SIGNAL  RED#######\n#########################\033[0m")
+                self.count_red += 1
+
             elif(int(box.cls.item()) == 16):
                 print("\033[32m###########################\n########SIGNAL BLUE########\n###########################\033[0m")
+                if(self.count_red > 5):
+                    self.pub_flag.publish(True)
+                    print("GOGOGOGOGOGOGOGOGOGOOGOGOGOGOGOGOGO")
+                    print("GOGOGOGOGOGOGOGOGOGOOGOGOGOGOGOGOGO")
+                    print("GOGOGOGOGOGOGOGOGOGOOGOGOGOGOGOGOGO")
+                    print("GOGOGOGOGOGOGOGOGOGOOGOGOGOGOGOGOGO")
+
+            else:
+                self.count_red = 0
 
         result_msg = bridge.cv2_to_imgmsg(infer_result[0].plot(), encoding="passthrough")
-
-        self.pub.publish(result_msg)
+        self.pub_img.publish(result_msg)
 
 if __name__=="__main__":
     TrafficlightDetector()
