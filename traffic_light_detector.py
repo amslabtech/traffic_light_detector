@@ -17,18 +17,12 @@ class TrafficlightDetector:
         self.model=YOLO(os.path.join( "weights", "vidvip_yolov8n_2023-05-19.pt"))
 
         image_sub = rospy.Subscriber('/CompressedImage', CompressedImage, self.image_callback)
-        # image_sub = rospy.Subscriber('/grasscam/image_raw/compressed', CompressedImage, self.image_callback)
         self.pub = rospy.Publisher('/yolo_result', Image, queue_size=10)
 
-
-
-
     def image_callback(self, msg):
-        # 画像データをROSメッセージから復元
         bridge = CvBridge()
         image = bridge.compressed_imgmsg_to_cv2(msg)
 
-        # YOLOで推論
         infer_result = self.model(image, classes=[15, 16], conf=0.10)
 
         for box in infer_result[0].boxes:
@@ -37,15 +31,8 @@ class TrafficlightDetector:
             elif(int(box.cls.item()) == 16):
                 print("\033[32m###########################\n########SIGNAL BLUE########\n###########################\033[0m")
 
-
-
-
-
-        # 推論結果をImage型に変換
         result_msg = bridge.cv2_to_imgmsg(infer_result[0].plot(), encoding="passthrough")
 
-
-        # 推論結果をpublish
         self.pub.publish(result_msg)
 
 if __name__=="__main__":
