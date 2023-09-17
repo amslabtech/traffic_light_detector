@@ -27,7 +27,7 @@ class TrafficlightDetector:
 
         for box in infer_result[0].boxes:
             if(int(box.cls.item()) == 15):
-                print("\033[31m#########################\n########SIGNAL RED#######\n#########################\033[0m")
+                print("\033[31m#########################\n#######SIGNAL  RED#######\n#########################\033[0m")
             elif(int(box.cls.item()) == 16):
                 print("\033[32m###########################\n########SIGNAL BLUE########\n###########################\033[0m")
 
