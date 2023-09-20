@@ -7,7 +7,8 @@
     <!--     <remap from="/grasscam/image_raw/compressed" to="/CompressedImage" /> -->
     <node pkg="rosbag" type="play" name="play" args="/home/amsl/bagfiles/rwrc/traficlight-2021-10-24-13-17tsukuba.bag -l">
         <remap from="/front_cam/color/image_raw/compressed" to="/CompressedImage" />
-
     </node>
+
+    <node pkg="rostopic" type="rostopic" name="exec_flag_pub" args="pub -r 10 /request_detect_traffic_light std_msgs/Bool True " />
     <node pkg="rviz" type="rviz" name="rviz" args="-d $(find traffic_light_detector)/config/config.rviz"/>
 </launch>
