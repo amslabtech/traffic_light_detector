@@ -17,9 +17,12 @@ class TrafficlightDetector:
 
         image_sub = rospy.Subscriber('/CompressedImage', CompressedImage, self.image_callback)
         self.pub_img = rospy.Publisher('/yolo_result', Image, queue_size=10)
-        self.pub_flag = rospy.Publisher('/signal_blue', Bool, queue_size=1)
+        self.pub_flag = rospy.Publisher('/cross_traffic_light_flag', Bool, queue_size=1)
 
-        self.count_red = 0
+        self.cross_traffic_light_flag=False
+        self.count_red = 0                          # Number of consecutive red-only detections
+        self.contain_red = False
+        self.contain_blue = False
 
     def image_callback(self, msg):
         bridge = CvBridge()
@@ -31,19 +34,28 @@ class TrafficlightDetector:
             if(int(box.cls.item()) == 15):
                 print("\033[31m#########################\n#######SIGNAL  RED#######\n#########################\033[0m")
                 self.count_red += 1
+                self.contain_red = True
 
             elif(int(box.cls.item()) == 16):
                 print("\033[32m###########################\n########SIGNAL BLUE########\n###########################\033[0m")
+                self.contain_blue = True
                 if(self.count_red > 5):
-                    self.pub_flag.publish(True)
+
                     print("GOGOGOGOGOGOGOGOGOGOOGOGOGOGOGOGOGO")
                     print("GOGOGOGOGOGOGOGOGOGOOGOGOGOGOGOGOGO")
                     print("GOGOGOGOGOGOGOGOGOGOOGOGOGOGOGOGOGO")
                     print("GOGOGOGOGOGOGOGOGOGOOGOGOGOGOGOGOGO")
 
-            else:
-                self.count_red = 0
+        if(not self.contain_red):
+            self.count_red = 0
 
+        if(self.count_red >= 5 and self.contain_blue and not self.contain_red):
+            self.cross_traffic_light_flag = True
+        else:
+            self.cross_traffic_light_flag = False
+
+
+        self.pub_flag.publish(self.cross_traffic_light_flag)
         result_msg = bridge.cv2_to_imgmsg(infer_result[0].plot(), encoding="passthrough")
         self.pub_img.publish(result_msg)
 
