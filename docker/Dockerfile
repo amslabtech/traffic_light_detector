@@ -30,29 +30,11 @@ RUN apt-get update && \
     iputils-ping \
     libeigen3-dev
 
-RUN apt install -y libmuparser-dev
-
 RUN python3 -m pip install -U --force-reinstall pip
 
 ## Pytorch Setup
 RUN pip install torch \
                 torchvision \
-                torchvideo \
-                'git+https://github.com/facebookresearch/fvcore' \
-                simplejson \
-                einops \
-                timm \
-                psutil \
-                scikit-learn \
-                opencv-python \
-                tensorboard \
-                torchsummary \
-                tqdm \
-                matplotlib \
-                pyyaml \
-                ttach \
-                grad-cam==1.2.9 \
-                tensorboardX \
                 ultralytics
 
 ######### ROS Noetic insatall ##########
@@ -73,20 +55,7 @@ RUN mkdir -p /home/catkin_ws/src && \
 	echo "export ROS_WORKSPACE=/home/catkin_ws" >> ~/.bashrc
 ## cmk
 RUN echo "function cmk(){\n	lastpwd=\$OLDPWD \n	cpath=\$(pwd) \n cd /home/catkin_ws \n catkin_make \$@ \n cd \$cpath \n	OLDPWD=\$lastpwd \n}" >> ~/.bashrc
-########## dnn_attitude_estimation ##########
-##### NO cache #####
-ARG CACHEBUST=1
-###IMU
-RUN cd /home && \
-    wget --load-cookies /tmp/cookies.txt "https://drive.google.com/uc?export=download&confirm=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate 'https://drive.google.com/uc?export=download&id=10y-YuB2QB48mQqsSwTpSID-qK7Hrgty5' -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')&id=10y-YuB2QB48mQqsSwTpSID-qK7Hrgty5" -O /home/MT_Software_Suite_linux-x86_2021.4.tar.gz && rm -rf /tmp/cookies.txt
-
-RUN cd /home/catkin_ws && \
-    /bin/bash -c "source /opt/ros/noetic/setup.bash; catkin_make"
-
-
 RUN cd /home/catkin_ws/src && \
-    git clone -b yolov8n https://github.com/YoshikiMaekawa2000/traffic_light_detector.git   && \
-    cd /home/catkin_ws && \
-    /bin/bash -c "source /opt/ros/noetic/setup.bash; catkin_make; source devel/setup.bash"
+    git clone -b yolov8n https://github.com/YoshikiMaekawa2000/traffic_light_detector.git
 
-WORKDIR /home/catkin_ws/
+WORKDIR /home/catkin_ws/src/traffic_light_detector
