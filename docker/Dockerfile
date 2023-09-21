@@ -1,5 +1,5 @@
 FROM nvidia/cuda:11.1.1-cudnn8-devel-ubuntu20.04
-
+RUN ln -sf /usr/share/zoneinfo/Asia/Tokyo /etc/localtime
 
 ########## nvidia-docker1 hooks ##########
 LABEL com.nvidia.volumes.needed="nvidia_driver"
@@ -58,9 +58,5 @@ RUN mkdir -p /home/catkin_ws/src && \
 RUN echo "function cmk(){\n	lastpwd=\$OLDPWD \n	cpath=\$(pwd) \n cd /home/catkin_ws \n catkin_make \$@ \n cd \$cpath \n	OLDPWD=\$lastpwd \n}" >> ~/.bashrc
 RUN cd /home/catkin_ws/src && \
     git clone -b yolov8n https://github.com/YoshikiMaekawa2000/traffic_light_detector.git
-
-# RUN echo "ls" >> ~/launch.sh
-RUN echo "ls" >> ~/etc/profile.d/launch.sh
-# RUN source ~/.bashrc
 
 WORKDIR /home/catkin_ws/src/traffic_light_detector

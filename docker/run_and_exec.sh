@@ -5,7 +5,7 @@ image_tag='noetic'
 
 # docker build -t $image_name:$image_tag .
 
-./docker_build.sh
+# ./docker_build.sh
 
 docker run -idt \
     --ipc=host \
@@ -17,6 +17,6 @@ docker run -idt \
     bash \
     --login
 
-docker exec traffic_light_detector /home/catkin_ws/src/traffic_light_detector/launch/launch.sh
+docker exec -itd traffic_light_detector /home/catkin_ws/src/traffic_light_detector/launch/launch.sh
 
 
