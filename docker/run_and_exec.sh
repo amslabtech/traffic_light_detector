@@ -17,5 +17,6 @@ docker run -idt \
     bash \
     --login
 
+docker exec -itd traffic_light_detector /home/catkin_ws/src/traffic_light_detector/launch/launch.sh
 
 

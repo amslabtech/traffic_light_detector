@@ -54,9 +54,12 @@ RUN mkdir -p /home/catkin_ws/src && \
 	echo "source /home/catkin_ws/devel/setup.bash" >> ~/.bashrc && \
 	echo "export ROS_PACKAGE_PATH=\${ROS_PACKAGE_PATH}:/home/catkin_ws" >> ~/.bashrc && \
 	echo "export ROS_WORKSPACE=/home/catkin_ws" >> ~/.bashrc
+ENV PATH=$PATH:/opt/ros/noetic/bin/roslaunch
 ## cmk
 RUN echo "function cmk(){\n	lastpwd=\$OLDPWD \n	cpath=\$(pwd) \n cd /home/catkin_ws \n catkin_make \$@ \n cd \$cpath \n	OLDPWD=\$lastpwd \n}" >> ~/.bashrc
-RUN cd /home/catkin_ws/src && \
-    git clone -b yolov8n https://github.com/YoshikiMaekawa2000/traffic_light_detector.git
+# RUN cd /home/catkin_ws/src && \
+#     git clone -b yolov8n https://github.com/YoshikiMaekawa2000/traffic_light_detector.git
+#
+# RUN ln -sf /home/catkin_ws/src/traffic_light_detector/launch/launch.sh /etc/profile.d/launch.sh
 
 WORKDIR /home/catkin_ws/src/traffic_light_detector
