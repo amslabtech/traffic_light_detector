@@ -5,5 +5,5 @@
         <remap from="CompressedImage" to="grasscam/image_raw/compressed"/>
     </node>
 
-    <node pkg="rviz" type="rviz" name="rviz" args="-d $(find traffic_light_detector)/config/config.rviz"/>
+    <!-- <node pkg="rviz" type="rviz" name="rviz" args="-d $(find traffic_light_detector)/config/config.rviz"/> -->
 </launch>
