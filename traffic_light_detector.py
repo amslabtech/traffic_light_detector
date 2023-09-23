@@ -21,10 +21,7 @@ class TrafficlightDetector:
         self.pub_flag = rospy.Publisher('/cross_traffic_light_flag', Bool, queue_size=1)
 
         self.exec_flag = False
-        self.cross_traffic_light_flag=False
-        self.count_red:list = [0]*10                          # List of the last 10 inference results
-        self.contain_red = False
-        self.contain_blue = False
+        self.count_red:list = [0]*10                          #　Number of frames including red in the last 10 frames
         self.red_count_threshold:int = 7
 
 
@@ -33,8 +30,9 @@ class TrafficlightDetector:
 
     def image_callback(self, msg):
 
-        self.contain_blue = False
-        self.contain_red = False
+        cross_traffic_light_flag = False
+        contain_blue = False
+        contain_red = False
         if(not self.exec_flag):
             pass
         else:
@@ -47,24 +45,23 @@ class TrafficlightDetector:
 
                 if(int(box.cls.item()) == 16):
                     print("\033[32m###########################\n########SIGNAL BLUE########\n###########################\033[0m")
-                    self.contain_blue = True
+                    contain_blue = True
 
                 elif(int(box.cls.item()) == 15):
                     print("\033[31m#########################\n#######SIGNAL  RED#######\n#########################\033[0m")
-                    self.contain_red = True
+                    contain_red = True
 
-
+            self.count_red.append(contain_red)
             del self.count_red[0]
-            self.count_red.append(1) if self.contain_red else self.count_red.append(0)
 
             print("COUNT RED", sum(self.count_red))
 
-            if(sum(self.count_red) >= self.red_count_threshold and self.contain_blue):
-                self.cross_traffic_light_flag = True
+            if(sum(self.count_red) >= self.red_count_threshold and contain_blue):
+                cross_traffic_light_flag = True
             else:
-                self.cross_traffic_light_flag = False
+                cross_traffic_light_flag = False
 
-            self.pub_flag.publish(self.cross_traffic_light_flag)
+            self.pub_flag.publish(cross_traffic_light_flag)
             result_msg = bridge.cv2_to_imgmsg(infer_result[0].plot(), encoding="passthrough")
             self.pub_img.publish(result_msg)
 
