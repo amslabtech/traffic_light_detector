@@ -1,11 +1,15 @@
 <?xml version="1.0"?>
 
 <launch>
+    
+    <arg name="conf_threshold" default="0.1"/>
+    <arg name="blue_count_threshold" default="20"/>
+    <arg name="red_count_threshold" default="50"/>
 
     <node name="traffic_light_detector" pkg="traffic_light_detector" type="traffic_light_detector.py" cwd="node" output="screen">
-        <param name="conf_threshold" value="0.1"/>
-        <param name="blue_count_threshold" value="20"/>
-        <param name="red_count_threshold" value="50"/>
+        <param name="conf_threshold" value="$(arg conf_threshold)"/>
+        <param name="blue_count_threshold" value="$(arg blue_count_threshold)"/>
+        <param name="red_count_threshold" value="$(arg red_count_threshold)"/>
     </node>
 
     <node pkg="rosbag" type="play" name="play" args="/media/amsl/96fde31e-3b9b-4160-8d8a-a4b913579ca2/bagfiles/bagfiles/rwrc/traficlight-2021-10-24-13-17tsukuba.bag -l">
