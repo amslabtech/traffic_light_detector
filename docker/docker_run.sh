@@ -1,7 +1,7 @@
 image_name="traffic_light_detector"
 tag_name="noetic"
 
-docker run -it \
+docker run \
     --ipc=host \
     --network=host \
     --rm \

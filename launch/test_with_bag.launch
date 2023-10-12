@@ -1,9 +1,15 @@
 <?xml version="1.0"?>
 
 <launch>
-    <node name="traffic_light_detector" pkg="traffic_light_detector" type="traffic_light_detector.py" cwd="node" output="screen"/>
 
-    <node pkg="rosbag" type="play" name="play" args="/home/amsl/bagfiles/rwrc/traficlight-2021-10-24-13-17tsukuba.bag -l">
+    <node name="traffic_light_detector" pkg="traffic_light_detector" type="traffic_light_detector.py" cwd="node" output="screen">
+        <param name="conf_threshold" value="0.1"/>
+        <param name="blue_count_threshold" value="20"/>
+        <param name="red_count_threshold" value="50"/>
+    </node>
+
+    <node pkg="rosbag" type="play" name="play" args="/media/amsl/96fde31e-3b9b-4160-8d8a-a4b913579ca2/bagfiles/bagfiles/rwrc/traficlight-2021-10-24-13-17tsukuba.bag -l">
+    <!-- <node pkg="rosbag" type="play" name="play" args="/home/amsl/bagfiles/rwrc/traficlight-2021-10-24-13-17tsukuba.bag -l"> -->
         <remap from="/front_cam/color/image_raw/compressed" to="/CompressedImage" />
     </node>
 
