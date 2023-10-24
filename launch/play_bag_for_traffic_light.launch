@@ -17,7 +17,8 @@
     <param name="traffic_light_detector/blue_count_threshold" value="$(arg blue_th)"/>
     <param name="traffic_light_detector/red_count_threshold" value="$(arg red_th)"/>
     <!-- <include file="$(find traffic_light_detector)/launch/docker_run.launch"/> -->
-    <node pkg="traffic_light_detector" type="traffic_light_detector.py" name="traffic_light_detector" cwd="node" output="screen">
+    <node pkg="traffic_light_detector" type="test.py" name="traffic_light_detector" cwd="node" output="screen">
+    <!-- <node pkg="traffic_light_detector" type="traffic_light_detector.py" name="traffic_light_detector" cwd="node" output="screen"> -->
         <remap from="/CompressedImage" to="/grasscam/image_raw/compressed" />
     </node>
 
