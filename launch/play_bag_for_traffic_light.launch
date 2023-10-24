@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+
+<launch>
+    <arg name="bagfile" default="/share/share/RWRC/rwrc23/bagfiles/rwrc23_main_2023-10-21-11-05-05.bag"/>
+    <arg name="s" default="958"/>
+    <arg name="d" default="10000.0"/>
+    <arg name="r" default="1" />
+
+
+    <!-- traffic light detector -->
+    <arg name="conf_th_red" default="0.3"/>
+    <arg name="conf_th_blue" default="0.05"/>
+    <arg name="blue_th" default="20"/>
+    <arg name="red_th" default="20"/>
+    <param name="traffic_light_detector/conf_threshold_blue" value="$(arg conf_th_blue)"/>
+    <param name="traffic_light_detector/conf_threshold_red" value="$(arg conf_th_red)"/>
+    <param name="traffic_light_detector/blue_count_threshold" value="$(arg blue_th)"/>
+    <param name="traffic_light_detector/red_count_threshold" value="$(arg red_th)"/>
+    <!-- <include file="$(find traffic_light_detector)/launch/docker_run.launch"/> -->
+    <node pkg="traffic_light_detector" type="traffic_light_detector.py" name="traffic_light_detector" cwd="node" output="screen">
+        <remap from="/CompressedImage" to="/grasscam/image_raw/compressed" />
+    </node>
+
+    <node pkg="rosbag" type="play" name="rosbag_play_traffic" output="screen" args="
+        $(arg bagfile)
+        -l
+        -s $(arg s)
+        -u $(arg d)
+        -r $(arg r)
+        --topics
+        /grasscam/image_raw/compressed
+        ">
+    </node>
+    <node pkg="rviz" type="rviz" name="rviz" args="-d /home/amsl/catkin_ws/src/traffic_light_detector/config/config.rviz"/>
+    <node pkg="rostopic" type="rostopic" name="exec_flag_pub" args="pub -r 10 /request_detect_traffic_light std_msgs/Bool True " />
+</launch>

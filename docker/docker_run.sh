@@ -9,4 +9,3 @@ docker run \
     --name "traffic_light_detector" \
     $image_name:$tag_name \
     bash \
-    --login

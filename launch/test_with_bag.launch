@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 
 <launch>
-    
+
     <arg name="conf_threshold" default="0.1"/>
     <arg name="blue_count_threshold" default="20"/>
     <arg name="red_count_threshold" default="50"/>
@@ -12,9 +12,11 @@
         <param name="red_count_threshold" value="$(arg red_count_threshold)"/>
     </node>
 
-    <node pkg="rosbag" type="play" name="play" args="/media/amsl/96fde31e-3b9b-4160-8d8a-a4b913579ca2/bagfiles/bagfiles/rwrc/traficlight-2021-10-24-13-17tsukuba.bag -l">
+    <!-- <node pkg="rosbag" type="play" name="play" args="/media/amsl/96fde31e-3b9b-4160-8d8a-a4b913579ca2/bagfiles/bagfiles/rwrc/traficlight-2021-10-24-13-17tsukuba.bag -l"> -->
     <!-- <node pkg="rosbag" type="play" name="play" args="/home/amsl/bagfiles/rwrc/traficlight-2021-10-24-13-17tsukuba.bag -l"> -->
-        <remap from="/front_cam/color/image_raw/compressed" to="/CompressedImage" />
+        <node pkg="rosbag" type="play" name="play" args="/share/share/RWRC/rwrc23/bagfiles/tsukuba_23-09-23/traffic_light_test_1.bag -l">
+        <!-- <remap from="/front_cam/color/image_raw/compressed" to="/CompressedImage" /> -->
+        <remap from="/grasscam/image_raw/compressed" to="/CompressedImage" />
     </node>
 
     <node pkg="rostopic" type="rostopic" name="exec_flag_pub" args="pub -r 10 /request_detect_traffic_light std_msgs/Bool True " />
