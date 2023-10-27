@@ -1,9 +1,12 @@
 <?xml version="1.0"?>
 
 <launch>
-    <arg name="bagfile" default="/share/share/RWRC/rwrc23/bagfiles/rwrc23_main_2023-10-21-11-05-05.bag"/>
-    <arg name="s" default="958"/>
-    <arg name="d" default="10000.0"/>
+    <arg name="bagfile" default="/home/amsl/traffic_light_test.bag"/>
+    <!-- <arg name="bagfile" default="/share/share/RWRC/rwrc23/bagfiles/tsukuba_23-10-22/rwrc23_main_2023-10-22-11-44-46.bag"/> -->
+    <!-- <arg name="bagfile" default="/share/share/RWRC/rwrc23/bagfiles/tsukuba_23-10-22/rwrc23_main_2023-10-22-11-11-36.bag"/> -->
+    <arg name="s" default="0.0"/>
+    <!-- <arg name="s" default="1200"/> -->
+    <arg name="d" default="300.0"/>
     <arg name="r" default="1" />
 
 
@@ -24,9 +27,7 @@
 
     <node pkg="rosbag" type="play" name="rosbag_play_traffic" output="screen" args="
         $(arg bagfile)
-        -l
         -s $(arg s)
-        -u $(arg d)
         -r $(arg r)
         --topics
         /grasscam/image_raw/compressed
