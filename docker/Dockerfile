@@ -50,7 +50,6 @@ RUN mkdir -p /home/amsl/catkin_ws/src && \
     cd /home/amsl/catkin_ws/src && \
     cd /home/amsl/catkin_ws && \
     echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc && \
-    echo "source /home/amsl/catkin_ws/devel/setup.bash" >> ~/.bashrc && \
     echo "export ROS_PACKAGE_PATH=/home/amsl/catkin_ws/src:$ROS_PACKAGE_PATH" >> ~/.bashrc && \
     echo "export ROS_WORKSPACE=/home/amsl/catkin_ws" >> ~/.bashrc && \
     export PYTHONPATH=$PYTHONPATH:/usr/lib/python3/dist-packages
