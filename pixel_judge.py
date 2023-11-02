@@ -162,21 +162,19 @@ class TrafficlightDetector:
     #         cv2.rectangle(img, (x1,y1), (x2, y2), color, thickness)
     #     return img
 
-    def _draw_box(self, img, box):
-        color = (0, 255, 0)  # バウンディングボックスの色 (BGR形式)
+    def _draw_box(self, img, box, color):
+        # color = (0, 255, 0)  # バウンディングボックスの色 (BGR形式)
         thickness = 4       # バウンディングボックスの線の太さ
         x1, y1, x2, y2 = box[0]
         cv2.rectangle(img, (x1,y1), (x2, y2), color, thickness)
         return img
 
-    def _valid_box_judge(self, yolo_output):
+    def _valid_box_judge(self):
 
         valid_boxes = []
         max_conf = -1
-        # HSVに変換
-        hsv = cv2.cvtColor(yolo_output.orig_img, cv2.COLOR_BGR2HSV)
 
-        print("BOXES:", len(self._stored_boxes))
+        # print("ALL STORED BOXES:", len(self._stored_boxes))
         for box in self._stored_boxes:
             conf = box.conf.item()
             # box = box.xywh.to('cpu').detach().numpy().astype(int)
@@ -188,10 +186,10 @@ class TrafficlightDetector:
 
             # 縦横比の確認
             if 1.55 <= h/w <= 1.85:
-                upper_hsv = hsv[y1:y1+h//2, x1:x2, :]
-                lower_hsv = hsv[y1+h//2:y2, x1:x2, :]
-                upper_brightness = np.mean(upper_hsv[:,:,2])
-                lower_brightness = np.mean(lower_hsv[:,:,2])
+                # upper_hsv = hsv[y1:y1+h//2, x1:x2, :]
+                # lower_hsv = hsv[y1+h//2:y2, x1:x2, :]
+                # upper_brightness = np.mean(upper_hsv[:,:,2])
+                # lower_brightness = np.mean(lower_hsv[:,:,2])
                 valid_boxes.append((conf,box))
 
                 # if(abs(upper_brightness - lower_brightness) > 10):
@@ -221,9 +219,26 @@ class TrafficlightDetector:
 
     def _pixel_judge(self, yolo_output):
 
-        valid_box = self._valid_box_judge(yolo_output)
+        valid_box = self._valid_box_judge()
+        x1, y1, x2, y2 = valid_box[0]
+        h=y2-y1
+        w=x2-x1
+
+        hsv = cv2.cvtColor(yolo_output.orig_img, cv2.COLOR_BGR2HSV)
+        upper_hsv = hsv[y1:y1+h//2, x1:x2, :]
+        lower_hsv = hsv[y1+h//2:y2, x1:x2, :]
+        upper_brightness = np.mean(upper_hsv[:,:,2])
+        lower_brightness = np.mean(lower_hsv[:,:,2])
+
+        print("UPPER:", upper_brightness)
+        print("LOWER:", lower_brightness)
+        if(upper_brightness < lower_brightness):
+            color = (0, 255, 0)  # バウンディングボックスの色 (BGR形式)
+        else:
+            color = (0, 0, 255)
+
         # print("VALID BOXES:", len(valid_boxes))
-        pixel_judge_output = self._draw_box(yolo_output.orig_img, valid_box)
+        pixel_judge_output = self._draw_box(yolo_output.orig_img, valid_box, color)
         return pixel_judge_output, "signal"
         # return pixel_judge_output, "signal"
 
@@ -255,7 +270,7 @@ class TrafficlightDetector:
 
     def _preprocess(self):
         if self._detect_backlight() and self._do_preprocess:
-            rospy.logwarn('BLACK LIGHT IS DETECTED')
+            # rospy.logwarn('BLACK LIGHT IS DETECTED')
             self._is_backlight = True
             return self._backlight_correction()
             # return self._input_cvimg
@@ -288,8 +303,8 @@ class TrafficlightDetector:
                 visualize_cvimg = pixel_judge_output
                 rospy.logerr("PIXEL JUDGE")
         else:
+            visualize_cvimg = input_img
             rospy.logerr("NOT WORKING")
-        # self._visualize(yolo_output[0].plot())
         self._visualize(visualize_cvimg)
         return signal
 
