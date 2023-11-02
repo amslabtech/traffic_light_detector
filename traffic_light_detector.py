@@ -7,8 +7,6 @@ from sensor_msgs.msg import CompressedImage, Image
 from std_msgs.msg import Bool
 from cv_bridge import CvBridge
 from ultralytics import YOLO
-from PIL import ImageEnhance
-from PIL import Image as pil_img
 import torch
 import numpy as np
 
