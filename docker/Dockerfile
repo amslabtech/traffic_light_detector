@@ -2,7 +2,7 @@ FROM ultralytics/ultralytics
 RUN ln -sf /usr/share/zoneinfo/Asia/Tokyo /etc/localtime
 SHELL ["/bin/bash", "-c"]
 
-##########  bias ##########
+########## basic settings ##########
 RUN apt-get update && apt-get install -y --no-install-recommends \
     x11-xserver-utils \
     git \
@@ -45,7 +45,7 @@ RUN sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main"
     # apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654 && \
     curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | apt-key add - && \
     apt-get update && \
-    apt-get install -y ros-noetic-ros-base python3-catkin-tools
+    apt-get install -y ros-noetic-ros-base python3-catkin-tools ros-noetic-cv-bridge
 ######### ROS build ##########
 RUN mkdir -p /home/amsl/catkin_ws/src && \
     export PYTHONPATH=\$PYTHONPATH:/usr/lib/python3/dist-packages && \
@@ -57,6 +57,10 @@ RUN echo "source /opt/ros/noetic/setup.bash" >> /etc/profile.d/rosconf.sh && \
     echo "source /home/amsl/catkin_ws/devel/setup.bash" >> /etc/profile.d/rosconf.sh && \
     echo "export ROS_WORKSPACE=/home/amsl/catkin_ws" >> /etc/profile.d/rosconf.sh && \
     echo "export ROS_PACKAGE_PATH=/home/amsl/catkin_ws/src:\$ROS_PACKAGE_PATH" >> /etc/profile.d/rosconf.sh
+
+######### pip #########
+RUN pip3 install rospkg \
+    netifaces
 # ENV PATH=$PATH:/opt/ros/noetic/bin/roslaunch
 # ## cmk
 # # RUN echo "function cmk(){\n	lastpwd=\$OLDPWD \n	cpath=\$(pwd) \n cd /home/catkin_ws \n catkin_make \$@ \n cd \$cpath \n	OLDPWD=\$lastpwd \n}" >> ~/.bashrc
@@ -65,4 +69,5 @@ RUN echo "source /opt/ros/noetic/setup.bash" >> /etc/profile.d/rosconf.sh && \
 #
 # # RUN ln -sf /home/catkin_ws/src/traffic_light_detector/launch/launch.sh /etc/profile.d/launch.sh
 #
+RUN ln -sf /opt/conda/bin/python3 /usr/bin/python3
 WORKDIR /home/amsl/catkin_ws/src/traffic_light_detector/launch

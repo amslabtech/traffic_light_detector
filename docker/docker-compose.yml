@@ -1,0 +1,9 @@
+version: '3'
+
+services:
+    traffic_light_detector:
+        image: traffic_light_detector:emergency
+        ipc: host
+        network_mode: host
+        runtime: nvidia
+        command: ./launch.sh

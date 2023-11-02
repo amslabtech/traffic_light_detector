@@ -1,15 +1,19 @@
 <?xml version="1.0"?>
 
 <launch>
-    <arg name="conf_threshold" default="0.1"/>
-    <arg name="blue_count_threshold" default="20"/>
-    <arg name="red_count_threshold" default="50"/>
+    <arg name="conf_th_blue" default="0.15"/>
+    <arg name="conf_th_red" default="0.30"/>
+    <arg name="min_conf" default="1e-5"/>
+    <arg name="count_th_blue" default="20"/>
+    <arg name="count_th_red" default="50"/>
 
     <node name="traffic_light_detector" pkg="traffic_light_detector" type="traffic_light_detector.py" cwd="node" output="screen">
         <remap from="CompressedImage" to="grasscam/image_raw/compressed"/>
-        <param name="conf_threshold" value="$(arg conf_threshold)"/>
-        <param name="blue_count_threshold" value="$(arg blue_count_threshold)"/>
-        <param name="red_count_threshold" value="$(arg red_count_threshold)"/>
+        <param name="traffic_light_detector/conf_threshold_blue" value="$(arg conf_th_blue)"/>
+        <param name="traffic_light_detector/conf_threshold_red" value="$(arg conf_th_red)"/>
+        <param name="traffic_light_detector/min_conf" value="$(arg min_conf)"/>
+        <param name="traffic_light_detector/count_threshold_blue" value="$(arg count_th_blue)"/>
+        <param name="traffic_light_detector/count_threshold_red" value="$(arg count_th_red)"/>
     </node>
 
     <!-- <node pkg="rviz" type="rviz" name="rviz" args="-d $(find traffic_light_detector)/config/config.rviz"/> -->
