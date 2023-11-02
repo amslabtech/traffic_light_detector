@@ -1,6 +1,6 @@
 # traffic light detector
 
 
-## dataset info
+## dataset and weight can be downloaded here
 [VIDVIP](https://tetsuakibaba.jp/project/vidvip/)
 
