@@ -165,7 +165,7 @@ class TrafficlightDetector:
         valid_boxes = []
         max_conf = -1
 
-        # print("ALL STORED BOXES:", len(self._stored_boxes))
+        print("ALL STORED BOXES:", len(self._stored_boxes))
         for box in self._stored_boxes:
             conf = box.conf.item()
             box = box.xyxy.to('cpu').detach().numpy().astype(int)
@@ -182,13 +182,23 @@ class TrafficlightDetector:
         # リストの最初(confが最大)の要素box成分を返す
         return sorted_valid_boxes[0][1]
 
-    def _store_boxes(self, yolo_output):
+    def _store_boxes(self, yolo_output, mode):
+        if mode == 0:
+            for box in yolo_output.boxes:
+                    # box = box.xyxy.to('cpu').detach().numpy().astype(int)
+                self._stored_boxes.append(box)
+        else:
+            if self._stored_red_box is None:
+                self._stored_red_box = yolo_output.boxes[0]
+            elif self._stored_red_box.conf.item() < yolo_output.boxes[0].conf.item():
+                self._stored_red_box = yolo_output.boxes[0]
+            print("TYPE:", type(self._stored_red_box))
 
 
-        for box in yolo_output.boxes:
-                # box = box.xyxy.to('cpu').detach().numpy().astype(int)
-            self._stored_boxes.append(box)
     def _brightness_judge(self, yolo_output):
+
+        if(self._stored_red_box is not None):
+            self._stored_boxes.append(self._stored_red_box)
 
         signal = None
         valid_box = self._valid_box_judge()
@@ -255,16 +265,18 @@ class TrafficlightDetector:
         yolo_output, max_conf, max_conf_class = self._yolo(input_img)
 
         if(max_conf_class is not None):
-            if((max_conf_class==16 and max_conf > self._conf_threshold_blue) or
-               (max_conf_class==15 and max_conf > self._conf_threshold_red)):
+            if((max_conf_class == 16 and max_conf > self._conf_threshold_blue) or
+               (max_conf_class == 15 and max_conf > self._conf_threshold_red)):
                 signal = yolo_output.names.get(max_conf_class)
                 # print("SIGNAL:", signal)
                 visualize_cvimg = yolo_output[0].plot()
                 self._count_to_start_brightness_judge = 0
                 self._stored_boxes.clear()
+                if max_conf_class == 15:
+                    self._store_boxes(yolo_output, 1)
             elif(self._count_to_start_brightness_judge < self._start_brightness_judge_threshold):
                 self._count_to_start_brightness_judge += 1
-                self._store_boxes(yolo_output)
+                self._store_boxes(yolo_output, 0)
                 visualize_cvimg = yolo_output[0].plot()
                 rospy.logwarn("UNDER THRESHOLD")
             else:
