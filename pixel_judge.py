@@ -29,7 +29,7 @@ class TrafficlightDetector:
         self._count_threshold_blue = rospy.get_param('~count_threshold_blue', 20)
         self._count_threshold_red = rospy.get_param('~count_threshold_red', 50)
         self._aspect_ratio_threshold = rospy.get_param('~aspect_ratio_threshold', 2.0)
-        self._start_pixel_judge_threshold = rospy.get_param('~do_pixel_judge_couont', 50)
+        self._start_brightness_judge_threshold = rospy.get_param('~do_brightness_judge_couont', 50)
         self._do_preprocess = rospy.get_param('~do_preprocess', True)
         self._hz = rospy.get_param('~hz', 10)
         ### basic setting ###
@@ -46,9 +46,9 @@ class TrafficlightDetector:
         ### basic config ###
         self._count_blue=0
         self._count_red = 0
-        self._count_to_start_pixel_judge = 0
+        self._count_to_start_brightness_judge = 0
         self._stored_boxes = []
-
+        self._stored_red_box = None
         # self.count_box = 0
 
     def _exec_flag_callback(self, msg: Bool):
@@ -154,16 +154,7 @@ class TrafficlightDetector:
         else:
             return False
 
-    # def _draw_boxes(self, img, boxes):
-    #     color = (0, 255, 0)  # バウンディングボックスの色 (BGR形式)
-    #     thickness = 4       # バウンディングボックスの線の太さ
-    #     for box in boxes:
-    #         x1, y1, x2, y2 = box[0]
-    #         cv2.rectangle(img, (x1,y1), (x2, y2), color, thickness)
-    #     return img
-
     def _draw_box(self, img, box, color):
-        # color = (0, 255, 0)  # バウンディングボックスの色 (BGR形式)
         thickness = 4       # バウンディングボックスの線の太さ
         x1, y1, x2, y2 = box[0]
         cv2.rectangle(img, (x1,y1), (x2, y2), color, thickness)
@@ -177,8 +168,6 @@ class TrafficlightDetector:
         # print("ALL STORED BOXES:", len(self._stored_boxes))
         for box in self._stored_boxes:
             conf = box.conf.item()
-            # box = box.xywh.to('cpu').detach().numpy().astype(int)
-            # x, y, w, h = box[0]
             box = box.xyxy.to('cpu').detach().numpy().astype(int)
             x1, y1, x2, y2 = box[0]
             h=y2-y1
@@ -186,39 +175,22 @@ class TrafficlightDetector:
 
             # 縦横比の確認
             if 1.55 <= h/w <= 1.85:
-                # upper_hsv = hsv[y1:y1+h//2, x1:x2, :]
-                # lower_hsv = hsv[y1+h//2:y2, x1:x2, :]
-                # upper_brightness = np.mean(upper_hsv[:,:,2])
-                # lower_brightness = np.mean(lower_hsv[:,:,2])
                 valid_boxes.append((conf,box))
 
-                # if(abs(upper_brightness - lower_brightness) > 10):
-                    # print("UPPER:", upper_brightness)
-                    # print("LOWER:", lower_brightness)
-                    # valid_boxes.append(box)
-        # for box in valid_boxes:
-        #     if(max_conf < box.conf.item()):
-        #         max_conf = box.conf.item()
-        # print("ALL BOXES:", len(valid_boxes))
-        # self.count_box += len(valid_boxes)
-        # print("BOXES:", self.count_box)
-        print("TUPLE TYPE:", type(valid_boxes[0]))
-        print("CONF TYPE:", type(valid_boxes[0][0]))
-        print("BOX TYPE:", type(valid_boxes[0][1]))
-
-        # タプルの最初の要素（cof）を基準にして降順に並び替え
+        # タプルの最初の要素(cof)を基準にしてリストを降順に並び替え
         sorted_valid_boxes = sorted(valid_boxes, key=lambda x: -x[0])
+        # リストの最初(confが最大)の要素box成分を返す
         return sorted_valid_boxes[0][1]
-
 
     def _store_boxes(self, yolo_output):
 
+
         for box in yolo_output.boxes:
-            # box = box.xyxy.to('cpu').detach().numpy().astype(int)
+                # box = box.xyxy.to('cpu').detach().numpy().astype(int)
             self._stored_boxes.append(box)
+    def _brightness_judge(self, yolo_output):
 
-    def _pixel_judge(self, yolo_output):
-
+        signal = None
         valid_box = self._valid_box_judge()
         x1, y1, x2, y2 = valid_box[0]
         h=y2-y1
@@ -234,13 +206,14 @@ class TrafficlightDetector:
         print("LOWER:", lower_brightness)
         if(upper_brightness < lower_brightness):
             color = (0, 255, 0)  # バウンディングボックスの色 (BGR形式)
+            signal = 'signal_blue'
         else:
             color = (0, 0, 255)
+            signal = 'signal_red'
 
         # print("VALID BOXES:", len(valid_boxes))
-        pixel_judge_output = self._draw_box(yolo_output.orig_img, valid_box, color)
-        return pixel_judge_output, "signal"
-        # return pixel_judge_output, "signal"
+        brightness_judge_output = self._draw_box(yolo_output.orig_img, valid_box, color)
+        return brightness_judge_output, signal
 
     def _yolo(self, input_img):
 
@@ -249,10 +222,6 @@ class TrafficlightDetector:
         output = None
         yolo_output = self._model(input_img, classes=[15, 16], conf=0) #self._model() returns list of class:ultralytics.engine.results.Results
 
-        # print("YOLO ALL OUTPUT", len(yolo_output[0]))
-        # print("YOLO:", len(yolo_output[0]))
-        # print("YOLO:", yolo_output[0].orig_img)
-        # self._visualize(yolo_output[0].orig_img)
         if(len(yolo_output[0]) != 0):
             max_conf = yolo_output[0].boxes[0].conf.item()
             max_conf_class = yolo_output[0].boxes[0].cls.item()
@@ -291,17 +260,17 @@ class TrafficlightDetector:
                 signal = yolo_output.names.get(max_conf_class)
                 # print("SIGNAL:", signal)
                 visualize_cvimg = yolo_output[0].plot()
-                self._count_to_start_pixel_judge = 0
+                self._count_to_start_brightness_judge = 0
                 self._stored_boxes.clear()
-            elif(self._count_to_start_pixel_judge < self._start_pixel_judge_threshold):
-                self._count_to_start_pixel_judge += 1
+            elif(self._count_to_start_brightness_judge < self._start_brightness_judge_threshold):
+                self._count_to_start_brightness_judge += 1
                 self._store_boxes(yolo_output)
                 visualize_cvimg = yolo_output[0].plot()
                 rospy.logwarn("UNDER THRESHOLD")
             else:
-                pixel_judge_output, signal = self._pixel_judge(yolo_output)
-                visualize_cvimg = pixel_judge_output
-                rospy.logerr("PIXEL JUDGE")
+                brightness_judge_output, signal = self._brightness_judge(yolo_output)
+                visualize_cvimg = brightness_judge_output
+                rospy.logwarn("BRIGHTNESS JUDGE")
         else:
             visualize_cvimg = input_img
             rospy.logerr("NOT WORKING")
