@@ -1,4 +1,1 @@
-dataset/
-weights/
-build/
-
+weights/*
