@@ -1,0 +1,11 @@
+version: '3'
+
+services:
+    traffic_light_detector:
+        image: traffic_light_detector:tmp
+        ipc: host
+        network_mode: host
+        runtime: nvidia
+        volumes:
+          - /home/amsl/catkin_ws/src/traffic_light_detector:/home/amsl/catkin_ws/src/traffic_light_detector
+        command: ./launch.sh
