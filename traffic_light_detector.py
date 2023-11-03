@@ -37,7 +37,7 @@ class TrafficlightDetector:
         self._is_backlight = False
         self._result_msg = CompressedImage()
         ### device setting ###
-        torch.cuda.set_device(0)
+        # torch.cuda.set_device(0)
         ### yolo weights ###
         weight_list = ["vidvip_yolov8n_2023-05-19.pt", "vidvipo_yolov8x_2023-05-19.pt", "yolov8n.pt"]
         self._model=YOLO(os.path.join( "weights", weight_list[1]))

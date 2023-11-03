@@ -30,10 +30,10 @@
     <!-- <arg name="conf_th_blue" default="0.00005"/> -->
     <arg name="blue_th" default="20"/>
     <arg name="red_th" default="20"/>
-    <param name="traffic_light_detector/conf_threshold_blue" value="$(arg conf_th_blue)"/>
-    <param name="traffic_light_detector/conf_threshold_red" value="$(arg conf_th_red)"/>
-    <param name="traffic_light_detector/blue_count_threshold" value="$(arg blue_th)"/>
-    <param name="traffic_light_detector/red_count_threshold" value="$(arg red_th)"/>
+    <!-- <param name="traffic_light_detector/conf_threshold_blue" value="$(arg conf_th_blue)"/> -->
+    <!-- <param name="traffic_light_detector/conf_threshold_red" value="$(arg conf_th_red)"/> -->
+    <!-- <param name="traffic_light_detector/blue_count_threshold" value="$(arg blue_th)"/> -->
+    <!-- <param name="traffic_light_detector/red_count_threshold" value="$(arg red_th)"/> -->
     <!-- <include file="$(find traffic_light_detector)/launch/docker_run.launch"/> -->
     <!-- <node pkg="traffic_light_detector" type="traffic_light_detector.py" name="traffic_light_detector" cwd="node" output="screen"> -->
         <!-- <remap from="/CompressedImage" to="/grasscam/image_raw/compressed" /> -->
@@ -47,6 +47,6 @@
         /grasscam/image_raw/compressed
         ">
     </node>
-    <node pkg="rviz" type="rviz" name="rviz" args="-d /home/amsl/catkin_ws/src/traffic_light_detector/config/config.rviz"/>
+    <!-- <node pkg="rviz" type="rviz" name="rviz" args="-d /home/amsl/catkin_ws/src/traffic_light_detector/config/config.rviz"/> -->
     <node pkg="rostopic" type="rostopic" name="exec_flag_pub" args="pub -r 10 /request_detect_traffic_light std_msgs/Bool True " />
 </launch>
