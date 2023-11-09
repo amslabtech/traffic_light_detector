@@ -16,19 +16,21 @@
     <!-- <arg name="s" default="1450"/> -->
     <!-- <arg name="bagfile" default="/share/share/RWRC/rwrc23/bagfiles/tsukuba_23-10-21/rwrc23_main_2023-10-21-15-23-04.bag"/> -->
     <!-- <arg name="s" default="630"/> -->
-    <arg name="bagfile" default="/share/share/RWRC/rwrc23/bagfiles/tsukuba_23-10-21/rwrc23_main_2023-10-21-15-35-48.bag"/>
-    <arg name="s" default="1135"/>
+    <!-- <arg name="bagfile" default="/share/share/RWRC/rwrc23/bagfiles/tsukuba_23-10-21/rwrc23_main_2023-10-21-15-35-48.bag"/> -->
+    <!-- <arg name="s" default="1135"/> -->
     <!-- <arg name="bagfile" default="/share/share/RWRC/rwrc23/bagfiles/tsukuba_23-10-22/rwrc23_main_2023-10-22-11-11-36.bag"/> -->
     <!-- <arg name="s" default="580"/> -->
+    <arg name="bagfile" default="/home/amsl/bagfiles/rwrc23/traffic_light/traffic_light_test.bag"/>
+    <arg name="s" default="0"/>
     <arg name="d" default="15.0"/>
     <arg name="r" default="1" />
 
 
     <!-- traffic light detector -->
-    <arg name="conf_th_red" default="0.3"/>
-    <arg name="conf_th_blue" default="0.15"/>
+    <arg name="conf_th_red" default="0.10"/>
+    <arg name="conf_th_blue" default="0.08"/>
     <!-- <arg name="conf_th_blue" default="0.00005"/> -->
-    <arg name="blue_th" default="20"/>
+    <arg name="blue_th" default="1"/>
     <arg name="red_th" default="20"/>
     <!-- <param name="traffic_light_detector/conf_threshold_blue" value="$(arg conf_th_blue)"/> -->
     <!-- <param name="traffic_light_detector/conf_threshold_red" value="$(arg conf_th_red)"/> -->
@@ -47,6 +49,6 @@
         /grasscam/image_raw/compressed
         ">
     </node>
-    <!-- <node pkg="rviz" type="rviz" name="rviz" args="-d /home/amsl/catkin_ws/src/traffic_light_detector/config/config.rviz"/> -->
+    <node pkg="rviz" type="rviz" name="rviz" args="-d /home/amsl/catkin_ws/src/traffic_light_detector/config/config.rviz"/>
     <node pkg="rostopic" type="rostopic" name="exec_flag_pub" args="pub -r 10 /request_detect_traffic_light std_msgs/Bool True " />
 </launch>

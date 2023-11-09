@@ -2,7 +2,7 @@ version: '2.4'
 
 services:
     traffic_light_detector:
-        image: traffic_light_detector:emergency
+        image: toshikinakamura/traffic_light_detector:emergency
         ipc: host
         network_mode: host
         runtime: nvidia
