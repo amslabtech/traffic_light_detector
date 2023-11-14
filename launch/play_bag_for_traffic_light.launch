@@ -4,9 +4,9 @@
     <!-- <arg name="bagfile" default="/home/amsl/traffic_light_test.bag"/> -->
     <!-- <arg name="s" default="70"/> -->
 
-    <!-- <arg name="bagfile" default="/share/share/RWRC/rwrc23/bagfiles/tsukuba_23-10-21/rwrc23_main_2023-10-21-11-05-05.bag"/> -->
-    <!-- <arg name="s" default="773"/> -->
-    <!-- <arg name="s" default="960"/> -->
+    <arg name="bagfile" default="/share/share/RWRC/rwrc23/bagfiles/tsukuba_23-10-21/rwrc23_main_2023-10-21-11-05-05.bag"/>
+    <!-- <arg name="s" default="803"/> -->
+    <arg name="s" default="960"/>
     <!-- <arg name="bagfile" default="/share/share/RWRC/rwrc23/bagfiles/tsukuba_23-10-21/rwrc23_main_2023-10-21-12-07-59.bag"/> -->
     <!-- <arg name="s" default="290"/> -->
     <!-- <arg name="s" default="470"/> -->
@@ -20,26 +20,19 @@
     <!-- <arg name="s" default="1135"/> -->
     <!-- <arg name="bagfile" default="/share/share/RWRC/rwrc23/bagfiles/tsukuba_23-10-22/rwrc23_main_2023-10-22-11-11-36.bag"/> -->
     <!-- <arg name="s" default="580"/> -->
-    <arg name="bagfile" default="/home/amsl/bagfiles/rwrc23/traffic_light/traffic_light_test.bag"/>
-    <arg name="s" default="0"/>
+    <!-- <arg name="bagfile" default="/home/amsl/bagfiles/rwrc23/traffic_light/traffic_light_test.bag"/> -->
+    <!-- <arg name="s" default="0"/> -->
     <arg name="d" default="15.0"/>
     <arg name="r" default="1" />
 
 
-    <!-- traffic light detector -->
-    <arg name="conf_th_red" default="0.10"/>
-    <arg name="conf_th_blue" default="0.08"/>
-    <!-- <arg name="conf_th_blue" default="0.00005"/> -->
-    <arg name="blue_th" default="1"/>
-    <arg name="red_th" default="20"/>
     <!-- <param name="traffic_light_detector/conf_threshold_blue" value="$(arg conf_th_blue)"/> -->
     <!-- <param name="traffic_light_detector/conf_threshold_red" value="$(arg conf_th_red)"/> -->
     <!-- <param name="traffic_light_detector/blue_count_threshold" value="$(arg blue_th)"/> -->
     <!-- <param name="traffic_light_detector/red_count_threshold" value="$(arg red_th)"/> -->
     <!-- <include file="$(find traffic_light_detector)/launch/docker_run.launch"/> -->
-    <!-- <node pkg="traffic_light_detector" type="traffic_light_detector.py" name="traffic_light_detector" cwd="node" output="screen"> -->
-        <!-- <remap from="/CompressedImage" to="/grasscam/image_raw/compressed" /> -->
-    <!-- </node> -->
+    <include file="$(find traffic_light_detector)/launch/traffic_light_detector.launch"/>
+
 
     <node pkg="rosbag" type="play" name="rosbag_play_traffic" output="screen" args="
         $(arg bagfile)

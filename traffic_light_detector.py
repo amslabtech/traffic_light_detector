@@ -207,17 +207,34 @@ class TrafficlightDetector:
         hsv = cv2.cvtColor(yolo_output.orig_img, cv2.COLOR_BGR2HSV)
         upper_hsv = hsv[y1:y1+h//2, x1:x2, :]
         lower_hsv = hsv[y1+h//2:y2, x1:x2, :]
+
+        # 黄色のH（色相）の範囲を定義（30°から60°）
+        lower_yellow_h = 55  # 下限
+        upper_yellow_h = 60  # 上限
+
+        # valid_box内の画像領域を取得
+        box_region_h = hsv[y1:y2, x1:x2, 0]  # H成分のみを取り出す
+
+        # 黄色いピクセルを検出（Hの値で判断）
+        yellow_mask_h = (box_region_h >= lower_yellow_h) & (box_region_h <= upper_yellow_h)
+
+        yellow_count = np.sum(yellow_mask_h)
+
         upper_brightness = np.mean(upper_hsv[:,:,2])
         lower_brightness = np.mean(lower_hsv[:,:,2])
 
-        print("UPPER:", upper_brightness)
-        print("LOWER:", lower_brightness)
-        if(upper_brightness < lower_brightness):
-            color = (0, 255, 0)  # バウンディングボックスの色 (BGR形式)
-            signal = 'signal_blue'
+        # print("UPPER:", upper_brightness)
+        # print("LOWER:", lower_brightness)
+        if(yellow_count > 5):
+            if(upper_brightness < lower_brightness):
+                color = (0, 255, 0)  # バウンディングボックスの色 (BGR形式)
+                signal = 'signal_blue'
+            else:
+                color = (0, 0, 255)
+                signal = 'signal_red'
         else:
-            color = (0, 0, 255)
-            signal = 'signal_red'
+            color = (0, 0, 0)
+            signal = 'unknown'
 
         # print("VALID BOXES:", len(valid_boxes))
         brightness_judge_output = self._draw_box(yolo_output.orig_img, valid_box, color)
