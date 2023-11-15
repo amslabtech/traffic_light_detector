@@ -34,7 +34,6 @@ class TrafficlightDetector:
         self._bridge = CvBridge()
         self._exec_flag = False
         self._callback_flag = False
-        self._is_backlight = False
         self._result_msg = CompressedImage()
         ### device setting ###
         torch.cuda.set_device(0)
@@ -171,7 +170,6 @@ class TrafficlightDetector:
             h=y2-y1
             w=x2-x1
 
-            # 縦横比の確認
             if 1.55 <= h/w <= 1.85:
                 valid_boxes.append((conf,box))
 
@@ -180,17 +178,53 @@ class TrafficlightDetector:
         # リストの最初(confが最大)の要素box成分を返す
         return sorted_valid_boxes[0][1]
 
-    def _store_boxes(self, yolo_output, mode):
-        if mode == 0:
-            for box in yolo_output.boxes:
-                    # box = box.xyxy.to('cpu').detach().numpy().astype(int)
-                self._stored_boxes.append(box)
+    def _contain_yellow_px(self, box, img):
+
+        lower_yellow_h = 55
+        upper_yellow_h = 60
+        x1, y1, x2, y2 = box[0]
+
+        hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+
+        box_region_h = hsv[y1:y2, x1:x2, 0]
+
+        yellow_mask_h = (box_region_h >= lower_yellow_h) & (box_region_h <= upper_yellow_h)
+        yellow_count = np.sum(yellow_mask_h)
+
+        if(yellow_count > 5):
+            return True
         else:
-            if self._stored_red_box is None:
-                self._stored_red_box = yolo_output.boxes[0]
-            elif self._stored_red_box.conf.item() < yolo_output.boxes[0].conf.item():
-                self._stored_red_box = yolo_output.boxes[0]
-            print("TYPE:", type(self._stored_red_box))
+            return False
+
+    def _within_appropriate_aspect(self, box):
+        x1, y1, x2, y2 = box[0]
+        h=y2-y1
+        w=x2-x1
+
+        if 1.55 <= h/w <= 1.85:
+            return True
+        else:
+            return False
+
+    def _store_valid_box(self, yolo_output):
+
+
+        for box in yolo_output.boxes:
+            box_xyxy = box.xyxy.to('cpu').detach().numpy().astype(int)
+            if(self._within_appropriate_aspect(box) and self._contain_yellow_px(box, yolo_output.orig_img)):
+                self._stored_box = ( (box_xyxy, box.conf.item() ) ) #tuple
+
+        #
+        # if mode == 0:
+        #     for box in yolo_output.boxes:
+        #             # box = box.xyxy.to('cpu').detach().numpy().astype(int)
+        #         self._stored_boxes.append(box)
+        # else:
+        #     if self._stored_red_box is None:
+        #         self._stored_red_box = yolo_output.boxes[0]
+        #     elif self._stored_red_box.conf.item() < yolo_output.boxes[0].conf.item():
+        #         self._stored_red_box = yolo_output.boxes[0]
+        #     print("TYPE:", type(self._stored_red_box))
 
 
     def _brightness_judge(self, yolo_output):
@@ -238,7 +272,7 @@ class TrafficlightDetector:
 
         # print("VALID BOXES:", len(valid_boxes))
         brightness_judge_output = self._draw_box(yolo_output.orig_img, valid_box, color)
-        return brightness_judge_output, signal
+        return signal, brightness_judge_output
 
     def _yolo(self, input_img):
 
@@ -252,24 +286,12 @@ class TrafficlightDetector:
             max_conf_class = yolo_output[0].boxes[0].cls.item()
             output = yolo_output[0]
 
-            ### DEBUG ###
-            # box = yolo_output[0].boxes[0].xyxy.to('cpu').detach().numpy().astype(int)
-            # x1, y1, x2, y2 = box[0]
-            # h=y2-y1
-            # w=x2-x1
-            # print("アスペクト比：", h/w)
-            ### DEBUG ###
-
         return output, max_conf, int(max_conf_class)
 
     def _preprocess(self):
         if self._detect_backlight() and self._do_preprocess:
-            # rospy.logwarn('BLACK LIGHT IS DETECTED')
-            self._is_backlight = True
             return self._backlight_correction()
-            # return self._input_cvimg
         else:
-            self._is_backlight = False
             return self._input_cvimg
 
     def _judge_signal(self) -> str:
@@ -280,23 +302,22 @@ class TrafficlightDetector:
         yolo_output, max_conf, max_conf_class = self._yolo(input_img)
 
         if(max_conf_class is not None):
+
+            self._store_valid_box(yolo_output)
+
             if((max_conf_class == 16 and max_conf > self._conf_threshold_blue) or
                (max_conf_class == 15 and max_conf > self._conf_threshold_red)):
+
                 signal = yolo_output.names.get(max_conf_class)
-                # print("SIGNAL:", signal)
                 visualize_cvimg = yolo_output[0].plot()
                 self._count_to_start_brightness_judge = 0
-                self._stored_boxes.clear()
-                if max_conf_class == 15:
-                    self._store_boxes(yolo_output, 1)
+
             elif(self._count_to_start_brightness_judge < self._start_brightness_judge_threshold):
                 self._count_to_start_brightness_judge += 1
-                self._store_boxes(yolo_output, 0)
                 visualize_cvimg = yolo_output[0].plot()
                 rospy.logwarn("UNDER THRESHOLD")
             else:
-                brightness_judge_output, signal = self._brightness_judge(yolo_output)
-                visualize_cvimg = brightness_judge_output
+                signal, visualize_cvimg = self._brightness_judge(yolo_output)
                 rospy.logwarn("BRIGHTNESS JUDGE")
         else:
             visualize_cvimg = input_img
