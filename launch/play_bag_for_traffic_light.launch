@@ -6,7 +6,7 @@
 
     <arg name="bagfile" default="/share/share/RWRC/rwrc23/bagfiles/tsukuba_23-10-21/rwrc23_main_2023-10-21-11-05-05.bag"/>
     <!-- <arg name="s" default="803"/> -->
-    <arg name="s" default="960"/>
+    <arg name="s" default="980"/>
     <!-- <arg name="bagfile" default="/share/share/RWRC/rwrc23/bagfiles/tsukuba_23-10-21/rwrc23_main_2023-10-21-12-07-59.bag"/> -->
     <!-- <arg name="s" default="290"/> -->
     <!-- <arg name="s" default="470"/> -->
