@@ -26,14 +26,8 @@
     <arg name="d" default="15.0"/>
     <arg name="r" default="1" />
 
-
-    <!-- <param name="traffic_light_detector/conf_threshold_blue" value="$(arg conf_th_blue)"/> -->
-    <!-- <param name="traffic_light_detector/conf_threshold_red" value="$(arg conf_th_red)"/> -->
-    <!-- <param name="traffic_light_detector/blue_count_threshold" value="$(arg blue_th)"/> -->
-    <!-- <param name="traffic_light_detector/red_count_threshold" value="$(arg red_th)"/> -->
     <!-- <include file="$(find traffic_light_detector)/launch/docker_run.launch"/> -->
-    <!-- <include file="$(find traffic_light_detector)/launch/traffic_light_detector.launch"/> -->
-
+    <include file="$(find traffic_light_detector)/launch/traffic_light_detector.launch"/>
 
     <node pkg="rosbag" type="play" name="rosbag_play_traffic" output="screen" args="
         $(arg bagfile)

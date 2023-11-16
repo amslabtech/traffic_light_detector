@@ -26,10 +26,18 @@ class TrafficlightDetector:
         self._min_conf = rospy.get_param('~min_conf', 0)
         self._count_threshold_blue = rospy.get_param('~count_threshold_blue', 20)
         self._count_threshold_red = rospy.get_param('~count_threshold_red', 50)
-        self._aspect_ratio_threshold = rospy.get_param('~aspect_ratio_threshold', 2.0)
         self._start_brightness_judge_threshold = rospy.get_param('~do_brightness_judge_couont', 50)
         self._do_preprocess = rospy.get_param('~do_preprocess', True)
         self._hz = rospy.get_param('~hz', 10)
+        ### print param ###
+        rospy.loginfo("conf_th_blue: %f", self._conf_threshold_blue)
+        rospy.loginfo("conf_th_red: %f", self._conf_threshold_red)
+        rospy.loginfo("min_conf: %f",self._min_conf)
+        rospy.loginfo("count_th_blue: %f", self._count_threshold_blue)
+        rospy.loginfo("count_th_red: %f", self._count_threshold_red)
+        rospy.loginfo("do_brightness_judge_couont: %d",self._start_brightness_judge_threshold)
+        rospy.loginfo("do_preprocess: %d",self._do_preprocess)
+        rospy.loginfo("hz: %d",self._hz)
         ### basic setting ###
         self._bridge = CvBridge()
         self._exec_flag = False
@@ -47,7 +55,6 @@ class TrafficlightDetector:
         self._stored_boxes = []
         self._stored_red_box = None
         # self.count_box = 0
-
     def _exec_flag_callback(self, msg: Bool):
         self._exec_flag = msg.data
 
