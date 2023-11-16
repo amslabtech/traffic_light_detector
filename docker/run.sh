@@ -1,4 +1,4 @@
-image_name="traffic_light_detector"
+image_name="toshikinakamura/traffic_light_detector"
 tag_name="emergency"
 
 docker run \
