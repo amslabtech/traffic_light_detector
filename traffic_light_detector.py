@@ -157,9 +157,8 @@ class TrafficlightDetector:
         cv2.rectangle(img, (x1,y1), (x2, y2), color, thickness)
         return img
 
-    def _draw_boxes(self, boxes, color=(0, 0, 0)):
-        thickness = 4       # バウンディングボックスの線の太さ
-        img=self._input_cvimg
+    def _draw_boxes(self, img, boxes, color=(0, 0, 0)):
+        thickness = 2       # バウンディングボックスの線の太さ
         for box in boxes:
             x1, y1, x2, y2 = box[0]
             cv2.rectangle(img, (x1,y1), (x2, y2), color, thickness)
@@ -206,7 +205,7 @@ class TrafficlightDetector:
                 tmp_boxes.append( (box_xyxy[0], box.conf.item() ) )#tuple
 
         ##### DEBUG #####
-        stored_boxes = self._draw_boxes(boxes = self._stored_boxes)
+        stored_boxes = self._draw_boxes(img=yolo_output.orig_img,  boxes=self._stored_boxes)
         self._visualize_box(stored_boxes)
         ##### DEBUG #####
 
