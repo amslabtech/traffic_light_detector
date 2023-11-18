@@ -2,8 +2,9 @@
 
 <launch>
 
-    <arg name="bagfile" default="/home/amsl/bagfiles/rwrc23/traffic_light/traffic_light_test.bag"/>
-    <arg name="s" default="0"/>
+    <arg name="bagfile" default="/home/amsl/bagfiles/rwrc23/rwrc23_main_2023-11-18-11-36-30.bag"/>
+    <!-- <arg name="bagfile" default="/home/amsl/bagfiles/rwrc23/traffic_light/traffic_light_test.bag"/> -->
+    <arg name="s" default="1200"/>
 
     <!-- <arg name="bagfile" default="/share/share/RWRC/rwrc23/bagfiles/tsukuba_23-10-21/rwrc23_main_2023-10-21-11-05-05.bag"/> -->
     <!-- <arg name="s" default="803"/> -->
@@ -27,7 +28,7 @@
     <arg name="r" default="1" />
 
     <!-- <include file="$(find traffic_light_detector)/launch/docker_run.launch"/> -->
-    <include file="$(find traffic_light_detector)/launch/traffic_light_detector.launch"/>
+    <!-- <include file="$(find traffic_light_detector)/launch/traffic_light_detector.launch"/> -->
 
     <node pkg="rosbag" type="play" name="rosbag_play_traffic" output="screen" args="
         $(arg bagfile)
@@ -35,8 +36,9 @@
         -r $(arg r)
         --topics
         /grasscam/image_raw/compressed
+        /front_hokuyo/scan
         ">
     </node>
-    <!-- <node pkg="rviz" type="rviz" name="rviz" args="-d /home/amsl/catkin_ws/src/traffic_light_detector/config/config.rviz"/> -->
-    <!-- <node pkg="rostopic" type="rostopic" name="exec_flag_pub" args="pub -r 10 /request_detect_traffic_light std_msgs/Bool True " /> -->
+    <node pkg="rviz" type="rviz" name="rviz" args="-d /home/amsl/catkin_ws/src/traffic_light_detector/config/config.rviz"/>
+    <node pkg="rostopic" type="rostopic" name="exec_flag_pub" args="pub -r 10 /request_detect_traffic_light std_msgs/Bool True " />
 </launch>
