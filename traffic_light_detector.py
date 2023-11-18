@@ -73,19 +73,16 @@ class TrafficlightDetector:
         self._cross_traffic_light_flag = False
 
         debug_flag = False
-        rospy.logwarn("DEBUG")
 
-        if(1):
-        # if(self._signal_red_to_blue):
+        if(self._signal_red_to_blue):
+            self._signal_red_to_blue = False
             front_laser_idx = int(len(msg.ranges)/2)
             for i in range(-1, 2):
                 if(msg.ranges[front_laser_idx + i] < 9.0 ):
-                    self._signal_red_to_blue = False
                     debug_flag = False
                 else:
                     self._cross_traffic_light_flag = True
                     debug_flag = True
-        print("debug flag:", debug_flag)
         self._pub_flag.publish(self._cross_traffic_light_flag)
 
 

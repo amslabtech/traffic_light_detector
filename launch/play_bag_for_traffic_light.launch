@@ -2,9 +2,9 @@
 
 <launch>
 
-    <arg name="bagfile" default="/home/amsl/bagfiles/rwrc23/rwrc23_main_2023-11-18-11-36-30.bag"/>
+    <!-- <arg name="bagfile" default="/home/amsl/bagfiles/rwrc23/rwrc23_main_2023-11-18-11-36-30.bag"/> -->
     <!-- <arg name="bagfile" default="/home/amsl/bagfiles/rwrc23/traffic_light/traffic_light_test.bag"/> -->
-    <arg name="s" default="1200"/>
+    <!-- <arg name="s" default="1200"/> -->
 
     <!-- <arg name="bagfile" default="/share/share/RWRC/rwrc23/bagfiles/tsukuba_23-10-21/rwrc23_main_2023-10-21-11-05-05.bag"/> -->
     <!-- <arg name="s" default="803"/> -->
@@ -23,6 +23,8 @@
     <!-- <arg name="bagfile" default="/share/share/RWRC/rwrc23/bagfiles/tsukuba_23-10-22/rwrc23_main_2023-10-22-11-11-36.bag"/> -->
     <!-- <arg name="s" default="580"/> -->
     <!-- <arg name="bagfile" default="/home/amsl/bagfiles/rwrc23/traffic_light/traffic_light_test.bag"/> -->
+    <arg name="bagfile" default="/media/amsl/96fde31e-3b9b-4160-8d8a-a4b913579ca2/rwrc23/rwrc23_main_2023-11-18-15-42-26.bag"/>
+    <arg name="s" default="220"/>
     <!-- <arg name="s" default="0"/> -->
     <arg name="d" default="15.0"/>
     <arg name="r" default="1" />
