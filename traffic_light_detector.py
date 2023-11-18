@@ -4,6 +4,7 @@ import os
 import cv2
 import ultralytics
 from sensor_msgs.msg import CompressedImage, Image
+from sensor_msgs.msg import LaserScan
 from std_msgs.msg import Bool
 from cv_bridge import CvBridge
 from ultralytics import YOLO
@@ -19,6 +20,7 @@ class TrafficlightDetector:
         self._pub_box = rospy.Publisher('/yolo_box/image_raw/compressed', CompressedImage, queue_size=10)
         self._pub_flag = rospy.Publisher('/cross_traffic_light_flag', Bool, queue_size=1)
         self._sub_img = rospy.Subscriber('/CompressedImage', CompressedImage, self._image_callback)
+        self._sub_laser = rospy.Subscriber('/front_hokuyo/scan', LaserScan, self._laser_callback)
         self._sub_exe_flag = rospy.Subscriber('/request_detect_traffic_light', Bool, self._exec_flag_callback)
         ### ros params ###
         self._conf_threshold_blue = rospy.get_param('~conf_threshold_blue', 0.3)
@@ -42,6 +44,8 @@ class TrafficlightDetector:
         self._bridge = CvBridge()
         self._exec_flag = False
         self._callback_flag = False
+        self._signal_red_to_blue = False
+        self._cross_traffic_light_flag = False
         self._result_msg = CompressedImage()
         ### device setting ###
         torch.cuda.set_device(0)
@@ -64,6 +68,23 @@ class TrafficlightDetector:
             self._callback_flag = True
         else:
             self._pub_img.publish(msg)
+
+    def _laser_callback(self, msg: LaserScan):
+        self._cross_traffic_light_flag = False
+
+        debug_flag = False
+
+        if(self._signal_red_to_blue):
+            self._signal_red_to_blue = False
+            front_laser_idx = int(len(msg.ranges)/2)
+            for i in range(-1, 2):
+                if(msg.ranges[front_laser_idx + i] < 9.0 ):
+                    debug_flag = False
+                else:
+                    self._cross_traffic_light_flag = True
+                    debug_flag = True
+        self._pub_flag.publish(self._cross_traffic_light_flag)
+
 
     def _visualize_box(self, img=None):
         # cv_img = img.to('cpu').detach().numpy().astype(int)
@@ -316,7 +337,6 @@ class TrafficlightDetector:
 
 
     def _run(self, _):
-        cross_traffic_light_flag = False
         ### initialize when the task type is not traffic light
         if(not self._exec_flag):
             self._count_blue=0
@@ -331,10 +351,9 @@ class TrafficlightDetector:
                 self._count_blue += 1
 
             if(self._count_blue > self._count_threshold_blue):
-                cross_traffic_light_flag = True
+                self._signal_red_to_blue = True
                 self._count_red = 0
                 self._count_blue = 0
-        self._pub_flag.publish(cross_traffic_light_flag)
 
     def __call__(self):
             duration = int(1.0 / self._hz * 1e9)
