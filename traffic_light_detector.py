@@ -28,7 +28,7 @@ class TrafficlightDetector:
         self._min_conf = rospy.get_param('~min_conf', 0)
         self._count_threshold_blue = rospy.get_param('~count_threshold_blue', 20)
         self._count_threshold_red = rospy.get_param('~count_threshold_red', 50)
-        self._start_brightness_judge_threshold = rospy.get_param('~do_brightness_judge_couont', 50)
+        self._start_brightness_judge_threshold = rospy.get_param('~do_brightness_judge_couont', 10)
         self._do_preprocess = rospy.get_param('~do_preprocess', True)
         self._hz = rospy.get_param('~hz', 10)
         ### print param ###
