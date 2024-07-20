@@ -1,0 +1,21 @@
+services:
+  traffic_light_detector:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    tty: true
+    network_mode: host
+    environment:
+      NVIDIA_DRIVER_CAPABILITIES: all
+    volumes:
+      - type: bind
+        source: .
+        target: /root/ws/src/traffic_light_detector
+    command: /bin/bash -c "source /opt/ros/noetic/setup.bash && cd /root/ws && catkin build && source /root/ws/devel/setup.bash && roslaunch traffic_light_detector traffic_light_detector.launch"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [ gpu ]
