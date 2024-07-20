@@ -50,6 +50,7 @@ class TrafficlightDetector:
             "~do_brightness_judge_couont", 10
         )
         self._do_preprocess = rospy.get_param("~do_preprocess", True)
+        self._weight_path = rospy.get_param("~weight_path", "")
         self._hz = rospy.get_param("~hz", 10)
         ### print param ###
         rospy.loginfo("conf_th_blue: %f", self._conf_threshold_blue)
@@ -72,13 +73,8 @@ class TrafficlightDetector:
         self._result_msg = CompressedImage()
         ### device setting ###
         torch.cuda.set_device(0)
-        ### yolo weights ###
-        weight_list = [
-            "vidvip_yolov8n_2023-05-19.pt",
-            "vidvipo_yolov8x_2023-05-19.pt",
-            "yolov8n.pt",
-        ]
-        self._model = YOLO(os.path.join("weights", weight_list[1]))
+        ### yolo model ###
+        self._model = YOLO(self._weight_path)
         ### basic config ###
         self._count_blue = 0
         self._count_red = 0
