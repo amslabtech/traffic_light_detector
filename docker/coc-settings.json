@@ -1,7 +1,0 @@
-{
-    "jedi": {
-        "enable": true,
-        "startupMessage": false,
-        "executable.command": "/opt/conda/bin/jedi-language-server"
-    }
-}
