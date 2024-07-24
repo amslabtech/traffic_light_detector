@@ -10,7 +10,7 @@ import ultralytics
 from cv_bridge import CvBridge
 from sensor_msgs.msg import CompressedImage, Image, LaserScan
 from std_msgs.msg import Bool
-from std_srvs.srv import SetBool, SetBoolResponse, Trigger, TriggerResponse
+from std_srvs.srv import SetBool, SetBoolResponse
 from ultralytics import YOLO
 
 
@@ -32,7 +32,7 @@ class TrafficlightDetector:
             "/front_hokuyo/scan", LaserScan, self._laser_callback
         )
         self._request_server = rospy.Service(
-            "~request", Trigger, self._request_callback
+            "~request", SetBool, self._request_callback
         )
         self._task_stop_client = rospy.ServiceProxy("/task/stop", SetBool)
         ### ros params ###
@@ -82,11 +82,13 @@ class TrafficlightDetector:
         self._stored_red_box = None
         # self.count_box = 0
 
-    def _request_callback(self, req: Trigger):
-        self._exec_flag = True
-        res: TriggerResponse = TriggerResponse(
-            success=True, message="Traffic light detection started."
-        )
+    def _request_callback(self, req: SetBool):
+        self._exec_flag = req.data
+        res: SetBoolResponse = SetBoolResponse(success=True)
+        if self._exec_flag:
+            res.message = "Traffic light detection started."
+        else:
+            res.message = "Traffic light detection stopped."
         return res
 
     def _image_callback(self, msg: CompressedImage):
