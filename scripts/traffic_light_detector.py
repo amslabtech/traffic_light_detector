@@ -10,7 +10,7 @@ import ultralytics
 from cv_bridge import CvBridge
 from sensor_msgs.msg import CompressedImage, Image, LaserScan
 from std_msgs.msg import Bool
-from std_srvs.srv import SetBool, Trigger, TriggerResponse
+from std_srvs.srv import SetBool, SetBoolResponse, Trigger, TriggerResponse
 from ultralytics import YOLO
 
 
@@ -111,7 +111,7 @@ class TrafficlightDetector:
                     self._cross_traffic_light_flag = True
                     debug_flag = True
         if self._cross_traffic_light_flag:
-            resp = self._task_stop_client(False)
+            resp: SetBoolResponse = self._task_stop_client(False)
             rospy.logwarn(resp.message)
             self._exec_flag = False
 
