@@ -81,6 +81,9 @@ class TrafficlightDetector:
         self._stored_boxes = []
         self._stored_red_box = None
         # self.count_box = 0
+        ### wait for services ###
+        rospy.logwarn("waiting for services")
+        rospy.wait_for_service("/task/stop")
 
     def _request_callback(self, req: SetBool):
         self._exec_flag = req.data
@@ -113,9 +116,14 @@ class TrafficlightDetector:
                     self._cross_traffic_light_flag = True
                     debug_flag = True
         if self._cross_traffic_light_flag:
-            resp: SetBoolResponse = self._task_stop_client(False)
-            rospy.logwarn(resp.message)
-            self._exec_flag = False
+            while not rospy.is_shutdown():
+                try:
+                    resp = self._task_stop_client(False)
+                    rospy.logwarn(resp.message)
+                    self._exec_flag = False
+                    break
+                except rospy.ServiceException as e:
+                    rospy.logwarn(e)
 
     def _visualize_box(self, img=None):
         # cv_img = img.to('cpu').detach().numpy().astype(int)
