@@ -8,6 +8,7 @@
     <arg name="count_th_blue" default="20"/>
     <arg name="count_th_red" default="20"/>
     <arg name="weight_path" default="$(find traffic_light_detector)/weights/vidvipo_yolov8x_2023-05-19.pt"/>
+    <arg name="debug" default="false"/>
 
     <node name="traffic_light_detector" pkg="traffic_light_detector" type="traffic_light_detector.py" cwd="node" output="screen">
         <remap from="/CompressedImage" to="$(arg CompressedImage)"/>
@@ -17,5 +18,6 @@
         <param name="count_threshold_blue" value="$(arg count_th_blue)"/>
         <param name="count_threshold_red" value="$(arg count_th_red)"/>
         <param name="weight_path" value="$(arg weight_path)"/>
+        <param name="debug" value="$(arg debug)"/>
     </node>
 </launch>

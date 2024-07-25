@@ -51,6 +51,7 @@ class TrafficlightDetector:
         self._do_preprocess = rospy.get_param("~do_preprocess", True)
         self._weight_path = rospy.get_param("~weight_path", "")
         self._hz = rospy.get_param("~hz", 10)
+        self._debug = rospy.get_param("~debug", False)
         ### print param ###
         rospy.loginfo("conf_th_blue: %f", self._conf_threshold_blue)
         rospy.loginfo("conf_th_red: %f", self._conf_threshold_red)
@@ -63,6 +64,7 @@ class TrafficlightDetector:
         )
         rospy.loginfo("do_preprocess: %d", self._do_preprocess)
         rospy.loginfo("hz: %d", self._hz)
+        rospy.loginfo(f"debug: {self._debug}")
         ### basic setting ###
         self._bridge = CvBridge()
         self._exec_flag = False
@@ -82,8 +84,11 @@ class TrafficlightDetector:
         self._stored_red_box = None
         # self.count_box = 0
         ### wait for services ###
-        rospy.logwarn("waiting for services")
-        rospy.wait_for_service("/task/stop")
+        if self._debug:
+            self._exec_flag = True
+        else:
+            rospy.logwarn("waiting for services")
+            rospy.wait_for_service("/task/stop")
 
     def _request_callback(self, req: SetBool):
         self._exec_flag = req.data
@@ -116,6 +121,10 @@ class TrafficlightDetector:
                     self._cross_traffic_light_flag = True
                     debug_flag = True
         if self._cross_traffic_light_flag:
+            if debug_flag:
+                rospy.logwarn("cross traffic light")
+                self._exec_flag = False
+                return
             while not rospy.is_shutdown():
                 try:
                     resp = self._task_stop_client(False)
