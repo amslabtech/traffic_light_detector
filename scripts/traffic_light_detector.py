@@ -46,8 +46,6 @@ class Setting:
     bridge: CvBridge = CvBridge()
     exec_flag: bool = False
     callback_flag: bool = False
-    signal_red_to_blue: bool = False
-    cross_traffic_light_flag: bool = False
     result_msg: CompressedImage = CompressedImage()
 
 
@@ -72,9 +70,6 @@ class TrafficlightDetector:
         # Subscriber
         self._sub_img = rospy.Subscriber(
             "/CompressedImage", CompressedImage, self._image_callback
-        )
-        self._sub_laser = rospy.Subscriber(
-            "/front_hokuyo/scan", LaserScan, self._laser_callback
         )
         # Service
         self._request_server = rospy.Service(
@@ -143,34 +138,6 @@ class TrafficlightDetector:
             self._setting.callback_flag = True
         else:
             self._pub_img.publish(msg)
-
-    def _laser_callback(self, msg: LaserScan):
-        self._setting.cross_traffic_light_flag = False
-
-        debug_flag = False
-
-        if self._setting.signal_red_to_blue:
-            self._setting.signal_red_to_blue = False
-            front_laser_idx = int(len(msg.ranges) / 2)
-            for i in range(-1, 2):
-                if msg.ranges[front_laser_idx + i] < 9.0:
-                    debug_flag = False
-                else:
-                    self._setting.cross_traffic_light_flag = True
-                    debug_flag = True
-        if self._setting.cross_traffic_light_flag:
-            if self._param.debug:
-                rospy.logwarn("cross traffic light")
-                self._setting.exec_flag = False
-                return
-            while not rospy.is_shutdown():
-                try:
-                    resp = self._task_stop_client(False)
-                    rospy.logwarn(resp.message)
-                    self._setting.exec_flag = False
-                    break
-                except rospy.ServiceException as e:
-                    rospy.logwarn(e)
 
     def _visualize_box(self, img=None):
         # cv_img = img.to('cpu').detach().numpy().astype(int)
@@ -473,9 +440,18 @@ class TrafficlightDetector:
                 self._count.count_blue += 1
 
             if self._count.count_blue > self._param.count_threshold_blue:
-                self._setting.signal_red_to_blue = True
-                self._count.count_red = 0
-                self._count.count_blue = 0
+                if self._param.debug:
+                    rospy.logwarn("cross traffic light")
+                    self._setting.exec_flag = False
+                    return
+                while not rospy.is_shutdown():
+                    try:
+                        resp = self._task_stop_client(False)
+                        rospy.logwarn(resp.message)
+                        self._setting.exec_flag = False
+                        break
+                    except rospy.ServiceException as e:
+                        rospy.logwarn(e)
 
     def __call__(self):
         duration = int(1.0 / self._param.hz * 1e9)
