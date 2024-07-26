@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import os
+from dataclasses import dataclass
 
 import cv2
 import numpy as np
@@ -14,122 +15,145 @@ from std_srvs.srv import SetBool, SetBoolResponse
 from ultralytics import YOLO
 
 
-class TrafficlightDetector:
+@dataclass(frozen=True)
+class Param:
+    hz: int
+    conf_threshold_blue: float
+    conf_threshold_red: float
+    count_threshold_blue: int
+    count_threshold_red: int
+    start_brightness_judge_threshold: int
+    do_preprocess: bool
+    weight_path: str
+    debug: bool
 
+    def print(self):
+        rospy.loginfo(f"hz: {self.hz}")
+        rospy.loginfo(f"conf_threshold_blue: {self.conf_threshold_blue}")
+        rospy.loginfo(f"conf_threshold_red: {self.conf_threshold_red}")
+        rospy.loginfo(f"count_threshold_blue: {self.count_threshold_blue}")
+        rospy.loginfo(f"count_threshold_red: {self.count_threshold_red}")
+        rospy.loginfo(
+            f"start_brightness_judge_threshold: {self.start_brightness_judge_threshold}"
+        )
+        rospy.loginfo(f"do_preprocess: {self.do_preprocess}")
+        rospy.loginfo(f"weight_path: {self.weight_path}")
+        rospy.loginfo(f"debug: {self.debug}")
+
+
+@dataclass
+class Setting:
+    bridge: CvBridge = CvBridge()
+    exec_flag: bool = False
+    callback_flag: bool = False
+    signal_red_to_blue: bool = False
+    cross_traffic_light_flag: bool = False
+    result_msg: CompressedImage = CompressedImage()
+
+
+@dataclass
+class Count:
+    count_blue: int = 0
+    count_red: int = 0
+    count_to_start_brightness_judge: int = 0
+
+
+class TrafficlightDetector:
     def __init__(self):
-        ### ros settings ###
         rospy.init_node("traffic_light_detector")
+
+        # Publisher
         self._pub_img = rospy.Publisher(
             "/yolo_result/image_raw/compressed", CompressedImage, queue_size=10
         )
         self._pub_box = rospy.Publisher(
             "/yolo_box/image_raw/compressed", CompressedImage, queue_size=10
         )
+        # Subscriber
         self._sub_img = rospy.Subscriber(
             "/CompressedImage", CompressedImage, self._image_callback
         )
         self._sub_laser = rospy.Subscriber(
             "/front_hokuyo/scan", LaserScan, self._laser_callback
         )
+        # Service
         self._request_server = rospy.Service(
             "~request", SetBool, self._request_callback
         )
         self._task_stop_client = rospy.ServiceProxy("/task/stop", SetBool)
-        ### ros params ###
-        self._conf_threshold_blue = rospy.get_param(
-            "~conf_threshold_blue", 0.3
-        )
-        self._conf_threshold_red = rospy.get_param("~conf_threshold_red", 0.3)
-        self._min_conf = rospy.get_param("~min_conf", 0)
-        self._count_threshold_blue = rospy.get_param(
-            "~count_threshold_blue", 20
-        )
-        self._count_threshold_red = rospy.get_param("~count_threshold_red", 50)
-        self._start_brightness_judge_threshold = rospy.get_param(
-            "~do_brightness_judge_couont", 10
-        )
-        self._do_preprocess = rospy.get_param("~do_preprocess", True)
-        self._weight_path = rospy.get_param("~weight_path", "")
-        self._hz = rospy.get_param("~hz", 10)
-        self._debug = rospy.get_param("~debug", False)
-        ### print param ###
-        rospy.loginfo("conf_th_blue: %f", self._conf_threshold_blue)
-        rospy.loginfo("conf_th_red: %f", self._conf_threshold_red)
-        rospy.loginfo("min_conf: %f", self._min_conf)
-        rospy.loginfo("count_th_blue: %f", self._count_threshold_blue)
-        rospy.loginfo("count_th_red: %f", self._count_threshold_red)
-        rospy.loginfo(
-            "do_brightness_judge_couont: %d",
-            self._start_brightness_judge_threshold,
-        )
-        rospy.loginfo("do_preprocess: %d", self._do_preprocess)
-        rospy.loginfo("hz: %d", self._hz)
-        rospy.loginfo(f"debug: {self._debug}")
-        ### basic setting ###
-        self._bridge = CvBridge()
-        self._exec_flag = False
-        self._callback_flag = False
-        self._signal_red_to_blue = False
-        self._cross_traffic_light_flag = False
-        self._result_msg = CompressedImage()
-        ### device setting ###
-        torch.cuda.set_device(0)
-        ### yolo model ###
-        self._model = YOLO(self._weight_path)
-        ### basic config ###
-        self._count_blue = 0
-        self._count_red = 0
-        self._count_to_start_brightness_judge = 0
+
+        self.load_param()
+        self._setting = Setting()
+        self._count = Count()
         self._stored_boxes = []
-        self._stored_red_box = None
-        # self.count_box = 0
+        self._model = YOLO(self._param.weight_path)
+        torch.cuda.set_device(0)
+
         ### wait for services ###
-        if self._debug:
-            self._exec_flag = True
+        if self._param.debug:
+            self._setting.exec_flag = True
         else:
             rospy.logwarn("waiting for services")
             rospy.wait_for_service("/task/stop")
 
+    def load_param(self):
+        self._param = Param(
+            hz=rospy.get_param("~hz", 10),
+            conf_threshold_blue=rospy.get_param("~conf_threshold_blue", 0.3),
+            conf_threshold_red=rospy.get_param("~conf_threshold_red", 0.3),
+            count_threshold_blue=rospy.get_param("~count_threshold_blue", 20),
+            count_threshold_red=rospy.get_param("~count_threshold_red", 50),
+            start_brightness_judge_threshold=rospy.get_param(
+                "~do_brightness_judge_couont", 10
+            ),
+            do_preprocess=rospy.get_param("~do_preprocess", True),
+            weight_path=rospy.get_param("~weight_path", ""),
+            debug=rospy.get_param("~debug", False),
+        )
+        self._param.print()
+
     def _request_callback(self, req: SetBool):
-        self._exec_flag = req.data
+        self._setting.exec_flag = req.data
         res: SetBoolResponse = SetBoolResponse(success=True)
-        if self._exec_flag:
+        if self._setting.exec_flag:
             res.message = "Traffic light detection started."
         else:
             res.message = "Traffic light detection stopped."
         return res
 
     def _image_callback(self, msg: CompressedImage):
-        if self._exec_flag and len(msg.data) != 0:
-            self._input_cvimg = self._bridge.compressed_imgmsg_to_cv2(msg)
-            self._callback_flag = True
+        if self._setting.exec_flag and len(msg.data) != 0:
+            self._input_cvimg = self._setting.bridge.compressed_imgmsg_to_cv2(
+                msg
+            )
+            self._setting.callback_flag = True
         else:
             self._pub_img.publish(msg)
 
     def _laser_callback(self, msg: LaserScan):
-        self._cross_traffic_light_flag = False
+        self._setting.cross_traffic_light_flag = False
 
         debug_flag = False
 
-        if self._signal_red_to_blue:
-            self._signal_red_to_blue = False
+        if self._setting.signal_red_to_blue:
+            self._setting.signal_red_to_blue = False
             front_laser_idx = int(len(msg.ranges) / 2)
             for i in range(-1, 2):
                 if msg.ranges[front_laser_idx + i] < 9.0:
                     debug_flag = False
                 else:
-                    self._cross_traffic_light_flag = True
+                    self._setting.cross_traffic_light_flag = True
                     debug_flag = True
-        if self._cross_traffic_light_flag:
+        if self._setting.cross_traffic_light_flag:
             if debug_flag:
                 rospy.logwarn("cross traffic light")
-                self._exec_flag = False
+                self._setting.exec_flag = False
                 return
             while not rospy.is_shutdown():
                 try:
                     resp = self._task_stop_client(False)
                     rospy.logwarn(resp.message)
-                    self._exec_flag = False
+                    self._setting.exec_flag = False
                     break
                 except rospy.ServiceException as e:
                     rospy.logwarn(e)
@@ -140,7 +164,7 @@ class TrafficlightDetector:
         if img is None:
             img = self._input_cvimg
 
-        result_msg = self._bridge.cv2_to_compressed_imgmsg(img)
+        result_msg = self._setting.bridge.cv2_to_compressed_imgmsg(img)
         self._pub_box.publish(result_msg)
 
     def _visualize(self, img=None):
@@ -149,7 +173,7 @@ class TrafficlightDetector:
         if img is None:
             img = self._input_cvimg
 
-        result_msg = self._bridge.cv2_to_compressed_imgmsg(img)
+        result_msg = self._setting.bridge.cv2_to_compressed_imgmsg(img)
         self._pub_img.publish(result_msg)
 
     def _backlight_correction(self):
@@ -373,7 +397,7 @@ class TrafficlightDetector:
         return output, max_conf, int(max_conf_class)
 
     def _preprocess(self):
-        if self._detect_backlight() and self._do_preprocess:
+        if self._detect_backlight() and self._param.do_preprocess:
             return self._backlight_correction()
         else:
             return self._input_cvimg
@@ -390,20 +414,22 @@ class TrafficlightDetector:
             self._store_box(yolo_output)
 
             if (
-                max_conf_class == 16 and max_conf > self._conf_threshold_blue
+                max_conf_class == 16
+                and max_conf > self._param.conf_threshold_blue
             ) or (
-                max_conf_class == 15 and max_conf > self._conf_threshold_red
+                max_conf_class == 15
+                and max_conf > self._param.conf_threshold_red
             ):
 
                 signal = yolo_output.names.get(max_conf_class)
                 visualize_cvimg = yolo_output[0].plot()
-                self._count_to_start_brightness_judge = 0
+                self._count.count_to_start_brightness_judge = 0
 
             elif (
-                self._count_to_start_brightness_judge
-                < self._start_brightness_judge_threshold
+                self._count.count_to_start_brightness_judge
+                < self._param.start_brightness_judge_threshold
             ):
-                self._count_to_start_brightness_judge += 1
+                self._count.count_to_start_brightness_judge += 1
                 visualize_cvimg = yolo_output[0].plot()
                 rospy.logwarn("UNDER THRESHOLD")
             else:
@@ -417,28 +443,28 @@ class TrafficlightDetector:
 
     def _run(self, _):
         ### initialize when the task type is not traffic light
-        if not self._exec_flag:
-            self._count_blue = 0
-            self._count_red = 0
+        if not self._setting.exec_flag:
+            self._count.count_blue = 0
+            self._count.count_red = 0
         ### publish flag if a blue is detected above a threshold value after a red is detected above a threshold value
-        elif self._callback_flag:
+        elif self._setting.callback_flag:
             signal = self._judge_signal()
 
             if signal == "signal_red":
-                self._count_red += 1
+                self._count.count_red += 1
             elif (
                 signal == "signal_blue"
-                and self._count_red > self._count_threshold_red
+                and self._count.count_red > self._param.count_threshold_red
             ):
-                self._count_blue += 1
+                self._count.count_blue += 1
 
-            if self._count_blue > self._count_threshold_blue:
-                self._signal_red_to_blue = True
-                self._count_red = 0
-                self._count_blue = 0
+            if self._count.count_blue > self._param.count_threshold_blue:
+                self._setting.signal_red_to_blue = True
+                self._count.count_red = 0
+                self._count.count_blue = 0
 
     def __call__(self):
-        duration = int(1.0 / self._hz * 1e9)
+        duration = int(1.0 / self._param.hz * 1e9)
         rospy.Timer(rospy.Duration(nsecs=duration), self._run)
         rospy.spin()
 
