@@ -159,7 +159,7 @@ class TrafficlightDetector:
                     self._setting.cross_traffic_light_flag = True
                     debug_flag = True
         if self._setting.cross_traffic_light_flag:
-            if debug_flag:
+            if self._param.debug:
                 rospy.logwarn("cross traffic light")
                 self._setting.exec_flag = False
                 return
