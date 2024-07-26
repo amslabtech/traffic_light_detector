@@ -89,6 +89,9 @@ class TrafficlightDetector:
         self._model = YOLO(self._param.weight_path)
         torch.cuda.set_device(0)
 
+        # print cuda status
+        self._print_cuda_status()
+
         ### wait for services ###
         if self._param.debug:
             self._setting.exec_flag = True
@@ -111,6 +114,17 @@ class TrafficlightDetector:
             debug=rospy.get_param("~debug", False),
         )
         self._param._print()
+
+    def _print_cuda_status(self):
+        rospy.loginfo(
+            f"torch.cuda.is_available(): {torch.cuda.is_available()}"
+        )
+        rospy.loginfo(
+            f"torch.cuda.current_device(): {torch.cuda.current_device()}"
+        )
+        rospy.loginfo(
+            f"torch.cuda.get_device_name(0): {torch.cuda.get_device_name(0)}"
+        )
 
     def _request_callback(self, req: SetBool):
         self._setting.exec_flag = req.data
