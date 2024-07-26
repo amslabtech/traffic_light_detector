@@ -27,7 +27,7 @@ class Param:
     weight_path: str
     debug: bool
 
-    def print(self):
+    def _print(self):
         rospy.loginfo(f"hz: {self.hz}")
         rospy.loginfo(f"conf_threshold_blue: {self.conf_threshold_blue}")
         rospy.loginfo(f"conf_threshold_red: {self.conf_threshold_red}")
@@ -82,7 +82,7 @@ class TrafficlightDetector:
         )
         self._task_stop_client = rospy.ServiceProxy("/task/stop", SetBool)
 
-        self.load_param()
+        self._load_param()
         self._setting = Setting()
         self._count = Count()
         self._stored_boxes = []
@@ -96,7 +96,7 @@ class TrafficlightDetector:
             rospy.logwarn("waiting for services")
             rospy.wait_for_service("/task/stop")
 
-    def load_param(self):
+    def _load_param(self):
         self._param = Param(
             hz=rospy.get_param("~hz", 10),
             conf_threshold_blue=rospy.get_param("~conf_threshold_blue", 0.3),
@@ -110,7 +110,7 @@ class TrafficlightDetector:
             weight_path=rospy.get_param("~weight_path", ""),
             debug=rospy.get_param("~debug", False),
         )
-        self._param.print()
+        self._param._print()
 
     def _request_callback(self, req: SetBool):
         self._setting.exec_flag = req.data
