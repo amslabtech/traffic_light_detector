@@ -1,10 +1,11 @@
 from ultralytics import YOLO
+import numpy as np
 
 class YOLODetector:
-    def __init__(self, weight_path):
+    def __init__(self, weight_path: str) -> None:
         self._model = YOLO(weight_path)
     
-    def _traffic_light_yolo(self, input_img):
+    def _traffic_light_yolo(self, input_img: np.ndarray) -> tuple:
         max_conf = -1
         max_conf_class = None
         output = None

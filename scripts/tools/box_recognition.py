@@ -11,20 +11,20 @@ class BoxRecognition:
         self._img_pub = img_pub
         self._box_pub = box_pub
     
-    def _draw_box(self, img, box, color=(0, 0, 0)):
+    def _draw_box(self, img: np.ndarray, box: tuple, color: tuple = (0, 0, 0)) -> np.ndarray:
         thickness = 4  # バウンディングボックスの線の太さ
         x1, y1, x2, y2 = box[0]
         cv2.rectangle(img, (x1, y1), (x2, y2), color, thickness)
         return img
 
-    def _draw_boxes(self, img, boxes, color=(0, 0, 0)):
+    def _draw_boxes(self, img: np.ndarray, boxes: list, color: tuple = (0, 0, 0)) -> np.ndarray:
         thickness = 2  # バウンディングボックスの線の太さ
         for box in boxes:
             x1, y1, x2, y2 = box[0]
             cv2.rectangle(img, (x1, y1), (x2, y2), color, thickness)
         return img
 
-    def _visualize_box(self, img=None):
+    def _visualize_box(self, img: np.ndarray = None) -> None:
         # cv_img = img.to('cpu').detach().numpy().astype(int)
 
         if img is None:
@@ -33,7 +33,7 @@ class BoxRecognition:
         result_msg = CvBridge().cv2_to_compressed_imgmsg(img)
         self._box_pub.publish(result_msg)
 
-    def _visualize(self, img=None):
+    def _visualize(self, img: np.ndarray = None) -> None:
         # cv_img = img.to('cpu').detach().numpy().astype(int)
 
         if img is None:
@@ -42,8 +42,7 @@ class BoxRecognition:
         result_msg = CvBridge().cv2_to_compressed_imgmsg(img)
         self._img_pub.publish(result_msg)
 
-    def _contain_yellow_px(self, box, img):
-
+    def _contain_yellow_px(self, box: tuple, img: np.ndarray) -> bool:
         lower_yellow_h = 23
         upper_yellow_h = 30
         x1, y1, x2, y2 = box[0]
@@ -61,7 +60,7 @@ class BoxRecognition:
         else:
             return False
 
-    def _within_appropriate_aspect(self, box):
+    def _within_appropriate_aspect(self, box: tuple) -> bool:
         x1, y1, x2, y2 = box[0]
         h = y2 - y1
         w = x2 - x1
@@ -71,8 +70,7 @@ class BoxRecognition:
         else:
             return False
 
-    def _store_box(self, yolo_output):
-
+    def _store_box(self, yolo_output) -> None:
         tmp_boxes = []
         valid_box = None
 
@@ -101,8 +99,8 @@ class BoxRecognition:
 
         self._stored_boxes.sort(key=lambda x: x[1], reverse=True)
 
-    def _brightness_judge(self, yolo_output):
-
+    def _brightness_judge(self, yolo_output) -> tuple:
+      
         signal = None
         output = None
 
@@ -138,7 +136,7 @@ class BoxRecognition:
 
         return signal, output
     
-    def _judge_signal(self, input_cvimg, param, count) -> str:
+    def _judge_signal(self, input_cvimg: np.ndarray, param, count) -> str:
 
         signal = None
         visualize_cvimg = None

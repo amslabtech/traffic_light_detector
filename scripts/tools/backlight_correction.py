@@ -4,7 +4,8 @@ import numpy as np
 class BacklightCorrection:
     def __init__(self):
         pass
-    def _backlight_correction(self, input_cvimg):
+    
+    def _backlight_correction(self, input_cvimg: np.ndarray) -> np.ndarray:
         # グレースケール変換
         gray_image = cv2.cvtColor(input_cvimg, cv2.COLOR_BGR2GRAY)
 
@@ -32,7 +33,7 @@ class BacklightCorrection:
 
         return corrected_image
 
-    def _detect_backlight(self, input_cvimg):
+    def _detect_backlight(self, input_cvimg: np.ndarray) -> bool:
         # 画像をグレースケールに変換
         gray_image = cv2.cvtColor(input_cvimg, cv2.COLOR_BGR2GRAY)
 
@@ -98,7 +99,7 @@ class BacklightCorrection:
         else:
             return False
 
-    def _preprocess(self, _input_cvimg, param):
+    def _preprocess(self, _input_cvimg: np.ndarray, param: object) -> np.ndarray:
         if self._detect_backlight(_input_cvimg) and param.do_preprocess:
             return self._backlight_correction(_input_cvimg)
         else:

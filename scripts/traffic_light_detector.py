@@ -49,7 +49,7 @@ class Count:
 
 
 class TrafficlightDetector:
-    def __init__(self):
+    def __init__(self) -> None:
         rospy.init_node("traffic_light_detector")
 
         self._img_pub = rospy.Publisher(
@@ -84,7 +84,7 @@ class TrafficlightDetector:
             rospy.logwarn("waiting for services")
             rospy.wait_for_service("/task/stop")
 
-    def _load_param(self):
+    def _load_param(self) -> None:
         self._param = Param(
             hz=rospy.get_param("~hz", 10),
             conf_threshold_blue=rospy.get_param("~conf_threshold_blue", 0.3),
@@ -100,7 +100,7 @@ class TrafficlightDetector:
         )
         self._param._print()
 
-    def _print_cuda_status(self):
+    def _print_cuda_status(self) -> None:
         rospy.loginfo(
             f"torch.cuda.is_available(): {torch.cuda.is_available()}"
         )
@@ -111,7 +111,7 @@ class TrafficlightDetector:
             f"torch.cuda.get_device_name(0): {torch.cuda.get_device_name(0)}"
         )
 
-    def _request_callback(self, req: SetBool):
+    def _request_callback(self, req: SetBool) -> SetBoolResponse:
         self._request_flag = req.data
         res: SetBoolResponse = SetBoolResponse(success=True)
         if self._request_flag:
@@ -120,13 +120,13 @@ class TrafficlightDetector:
             res.message = "Traffic light detection stopped."
         return res
 
-    def _image_callback(self, msg: CompressedImage):
+    def _image_callback(self, msg: CompressedImage) -> None:
         if self._request_flag and len(msg.data) != 0:
             self._input_cvimg = CvBridge().compressed_imgmsg_to_cv2(msg)
         else:
             self._img_pub.publish(msg)
                 
-    def _run(self, _):
+    def _run(self, _) -> None:
         # initialize when the task type is not traffic light
         if not self._request_flag:
             self._count.blue = 0
@@ -158,7 +158,7 @@ class TrafficlightDetector:
                     except rospy.ServiceException as e:
                         rospy.logwarn(e)
 
-    def __call__(self):
+    def __call__(self) -> None:
         duration = int(1.0 / self._param.hz * 1e9)
         rospy.Timer(rospy.Duration(nsecs=duration), self._run)
         rospy.spin()
