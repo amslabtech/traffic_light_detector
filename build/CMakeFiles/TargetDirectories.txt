@@ -1,2 +1,0 @@
-/home/amsl/rwrc/src/amsl_navigation/amsl_navigation/traffic_light_detector/build/CMakeFiles/edit_cache.dir
-/home/amsl/rwrc/src/amsl_navigation/amsl_navigation/traffic_light_detector/build/CMakeFiles/rebuild_cache.dir
