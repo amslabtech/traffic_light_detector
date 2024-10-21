@@ -1,4 +1,4 @@
 weights/*
 !.gitkeep
-scripts/tools/__pycache__
-build
+scripts/tools/__pycache__/
+build/
