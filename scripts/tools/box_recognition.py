@@ -43,7 +43,6 @@ class BoxRecognition:
         self._img_pub.publish(result_msg)
 
     def _contain_yellow_px(self, box: tuple, img: np.ndarray) -> bool:
-
         lower_yellow_h = 23
         upper_yellow_h = 30
         x1, y1, x2, y2 = box[0]
@@ -72,7 +71,6 @@ class BoxRecognition:
             return False
 
     def _store_box(self, yolo_output) -> None:
-
         tmp_boxes = []
         valid_box = None
 
@@ -102,7 +100,7 @@ class BoxRecognition:
         self._stored_boxes.sort(key=lambda x: x[1], reverse=True)
 
     def _brightness_judge(self, yolo_output) -> tuple:
-
+      
         signal = None
         output = None
 
