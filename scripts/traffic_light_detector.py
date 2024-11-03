@@ -17,12 +17,13 @@ from tools.crosswalk_detector import CrosswalkDetector
 @dataclass(frozen=True)
 class Param:
     hz: int
-    conf_threshold_blue: float
-    conf_threshold_red: float
-    conf_threshold_crosswalk: float
+    confidence_threshold_blue: float
+    confidence_threshold_red: float
+    confidence_threshold_crosswalk: float
     count_threshold_blue: int
     count_threshold_red: int
     count_threshold_crosswalk: int
+    count_threshold_no_vehicle: int
     start_brightness_judge_threshold: int
     do_preprocess: bool
     weight_path: str
@@ -32,10 +33,13 @@ class Param:
     def _print(self):
         # Print the parameters for debugging
         rospy.loginfo(f"hz: {self.hz}")
-        rospy.loginfo(f"conf_threshold_blue: {self.conf_threshold_blue}")
-        rospy.loginfo(f"conf_threshold_red: {self.conf_threshold_red}")
+        rospy.loginfo(f"confidence_threshold_blue: {self.confidence_threshold_blue}")
+        rospy.loginfo(f"confidence_threshold_red: {self.confidence_threshold_red}")
+        rospy.loginfo(f"confidence_threshold_crosswalk: {self.confidence_threshold_crosswalk}")
         rospy.loginfo(f"count_threshold_blue: {self.count_threshold_blue}")
         rospy.loginfo(f"count_threshold_red: {self.count_threshold_red}")
+        rospy.loginfo(f"count_threshold_crosswalk: {self.count_threshold_crosswalk}")
+        rospy.loginfo(f"count_threshold_no_vehicle: {self.count_threshold_no_vehicle}")
         rospy.loginfo(
             f"start_brightness_judge_threshold: {self.start_brightness_judge_threshold}"
         )
@@ -50,7 +54,7 @@ class Count:
     blue: int = 0
     red: int = 0
     to_start_brightness_judge: int = 0
-    no_people_on_crosswalk: int = 0
+    no_vehicle_on_crosswalk: int = 0
 
 
 class TrafficlightDetector:
@@ -77,8 +81,8 @@ class TrafficlightDetector:
         self._input_cvimg = None
         self._can_proceed = False
         
-        self._yolo_traffic_light = YOLODetector(weight_path=self._param.weight_path)
-        self._yolo_crosswalk = YOLODetector(weight_path=self._param.weight_path_seg)
+        self._yolo_traffic_light = YOLODetector(weight_path=self._param.weight_path, conf_th_crosswalk=self._param.confidence_threshold_crosswalk)
+        self._yolo_crosswalk = YOLODetector(weight_path=self._param.weight_path_seg, conf_th_crosswalk=self._param.confidence_threshold_crosswalk)
         self._backlight_correction = BacklightCorrection()
         self._box_recognition = BoxRecognition(
             self._yolo_traffic_light, self._backlight_correction,
@@ -98,12 +102,13 @@ class TrafficlightDetector:
     def _load_param(self) -> None:
         self._param = Param(
             hz=rospy.get_param("~hz", 10),
-            conf_threshold_blue=rospy.get_param("~conf_threshold_blue", 0.3),
-            conf_threshold_red=rospy.get_param("~conf_threshold_red", 0.3),
-            conf_threshold_crosswalk=rospy.get_param("~conf_threshold_crosswalk", 0.5),
+            confidence_threshold_blue=rospy.get_param("~confidence_threshold_blue", 0.3),
+            confidence_threshold_red=rospy.get_param("~confidence_threshold_red", 0.3),
+            confidence_threshold_crosswalk=rospy.get_param("~confidence_threshold_crosswalk", 0.5),
             count_threshold_blue=rospy.get_param("~count_threshold_blue", 20),
             count_threshold_red=rospy.get_param("~count_threshold_red", 30),
             count_threshold_crosswalk=rospy.get_param("~count_threshold_crosswalk", 40),
+            count_threshold_no_vehicle=rospy.get_param("~count_threshold_no_vehicle", 5),
             start_brightness_judge_threshold=rospy.get_param(
                 "~do_brightness_judge_count", 10
             ),
@@ -162,14 +167,15 @@ class TrafficlightDetector:
              # Check for crosswalk overlap
             crosswalk_th_img = self._crosswalk_detector._cumulative_crosswalk(input_cvimg=self._input_cvimg)
 
+            if self._crosswalk_detector._check_overlap_with_crosswalk(input_cvimg=self._input_cvimg, thresholded_img=crosswalk_th_img):
+                self._count.no_vehicle_on_crosswalk += 1
+            else:
+                self._count.no_vehicle_on_crosswalk = 0
+                rospy.logwarn("Vehicle on the crosswalk")
+
             if self._count.blue > self._param.count_threshold_blue:
-                if self._crosswalk_detector._check_overlap_with_crosswalk(input_cvimg=self._input_cvimg, thresholded_img=crosswalk_th_img):
-                    self._count.no_people_on_crosswalk += 1
-                    if self._count.no_people_on_crosswalk > 10:
-                        self._can_proceed = True
-                else:
-                    self._count.no_people_on_crosswalk = 0
-                    rospy.logwarn("Vehicle on the crosswalk")
+                if self._count.no_vehicle_on_crosswalk > self._param.count_threshold_no_vehicle:
+                    self._can_proceed = True
             
             if self._can_proceed:
                 if self._param.debug:

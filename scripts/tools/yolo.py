@@ -5,7 +5,8 @@ import rospy
 
 
 class YOLODetector:
-    def __init__(self, weight_path: str) -> None:
+    def __init__(self, weight_path: str, conf_th_crosswalk: float) -> None:
+        self._conf_th_crosswalk = conf_th_crosswalk
         self._model = YOLO(weight_path)
     
     def _traffic_light_yolo(self, input_img: np.ndarray) -> tuple: 
@@ -25,7 +26,7 @@ class YOLODetector:
 
     def _crosswalk_yolo(self, input_img: np.ndarray) -> np.ndarray:   
         # crosswalk
-        yolo_output = self._model(input_img, classes=[13], conf=0.5, verbose=False)
+        yolo_output = self._model(input_img, classes=[13], conf=self._conf_th_crosswalk, verbose=False)
         
         if yolo_output is None or len(yolo_output) == 0:  # Checks if detections are empty
             rospy.logwarn("yolo_output is None")
@@ -45,7 +46,7 @@ class YOLODetector:
 
     def _vehicle_yolo(self, input_img: np.ndarray) -> np.ndarray:
         # bicycle, car, motorbike, bus, train, truck
-        yolo_output = self._model(input_img, classes=[1, 2, 3, 4, 5, 6], conf=0.5, verbose=False)
+        yolo_output = self._model(input_img, classes=[1, 2, 3, 4, 5, 6], conf=self._conf_th_crosswalk, verbose=False)
         
         if yolo_output is None or len(yolo_output) == 0: # Checks if detections are empty
             rospy.logwarn("yolo_output is None")

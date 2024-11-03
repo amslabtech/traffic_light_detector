@@ -156,10 +156,10 @@ class BoxRecognition:
 
             if (
                 max_conf_class == 16
-                and max_conf > self._param.conf_threshold_blue
+                and max_conf > self._param.confidence_threshold_blue
             ) or (
                 max_conf_class == 15
-                and max_conf > self._param.conf_threshold_red
+                and max_conf > self._param.confidence_threshold_red
             ):
 
                 signal = yolo_output.names.get(max_conf_class)
