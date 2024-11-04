@@ -8,6 +8,9 @@ class CrosswalkDetector:
         self._is_first_frame = True
         self._cumulative_crosswalk_img = None # Stores cumulative crosswalk detection
     
+    def reset_buffer(self):
+        self._cumulative_crosswalk_img = None
+    
     def _apply_count_threshold_crosswalk(self) -> np.ndarray:
         # Applies a threshold to the cumulative image using count_threshold_crosswalk. 
         

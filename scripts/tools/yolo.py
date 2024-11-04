@@ -15,14 +15,14 @@ class YOLODetector:
         output = None
         # self._model() returns list of
         #   class:ultralytics.engine.results.Results
-        yolo_output = self._model(input_img, classes=[15, 16], conf=0, verbose=True)
+        yolo_output = self._model(input_img, classes=[15, 16], conf=0, verbose=False)
 
         if len(yolo_output[0]) != 0: # Checks if there are any detections
             max_conf = yolo_output[0].boxes[0].conf.item()
             max_conf_class = yolo_output[0].boxes[0].cls.item()
             output = yolo_output[0]
 
-        return output, max_conf, int(max_conf_class)
+        return output, max_conf, int(max_conf_class) if max_conf_class is not None else -1
 
     def _crosswalk_yolo(self, input_img: np.ndarray) -> np.ndarray:   
         # crosswalk
@@ -40,7 +40,7 @@ class YOLODetector:
                 cv2.fillPoly(mask, [segment.astype(np.int32)], 1) # Fill mask with 1
                 output_img = cv2.bitwise_or(output_img, mask)
         else:
-            rospy.logwarn("No segmentation masks found for detected crosswalk in YOLO output")
+            rospy.logwarn("No masks for crosswalk in YOLO output")
             
         return output_img
 

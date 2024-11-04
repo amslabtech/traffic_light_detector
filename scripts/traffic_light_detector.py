@@ -20,10 +20,13 @@ class Param:
     confidence_threshold_blue: float
     confidence_threshold_red: float
     confidence_threshold_crosswalk: float
-    count_threshold_blue: int
-    count_threshold_red: int
+    count_threshold_blue_detect_blue: int
+    count_threshold_red_detect_blue: int
+    count_threshold_blue_detect_red: int
+    count_threshold_red_detect_red: int
     count_threshold_crosswalk: int
     count_threshold_no_vehicle: int
+    count_threshold_allowed_time: int
     start_brightness_judge_threshold: int
     do_preprocess: bool
     weight_path: str
@@ -36,10 +39,13 @@ class Param:
         rospy.loginfo(f"confidence_threshold_blue: {self.confidence_threshold_blue}")
         rospy.loginfo(f"confidence_threshold_red: {self.confidence_threshold_red}")
         rospy.loginfo(f"confidence_threshold_crosswalk: {self.confidence_threshold_crosswalk}")
-        rospy.loginfo(f"count_threshold_blue: {self.count_threshold_blue}")
-        rospy.loginfo(f"count_threshold_red: {self.count_threshold_red}")
+        rospy.loginfo(f"count_threshold_blue_detect_blue: {self.count_threshold_blue_detect_blue}")
+        rospy.loginfo(f"count_threshold_red_detect_blue: {self.count_threshold_red_detect_blue}")
+        rospy.loginfo(f"count_threshold_blue_detect_red: {self.count_threshold_blue_detect_red}")
+        rospy.loginfo(f"count_threshold_red_detect_red: {self.count_threshold_red_detect_red}")
         rospy.loginfo(f"count_threshold_crosswalk: {self.count_threshold_crosswalk}")
         rospy.loginfo(f"count_threshold_no_vehicle: {self.count_threshold_no_vehicle}")
+        rospy.loginfo(f"count_threshold_allowed_time: {self.count_threshold_allowed_time}")
         rospy.loginfo(
             f"start_brightness_judge_threshold: {self.start_brightness_judge_threshold}"
         )
@@ -55,6 +61,7 @@ class Count:
     red: int = 0
     to_start_brightness_judge: int = 0
     no_vehicle_on_crosswalk: int = 0
+    allowed_time: int = 0
 
 
 class TrafficlightDetector:
@@ -79,6 +86,7 @@ class TrafficlightDetector:
         self._count = Count()
         self._request_flag = self._param.debug
         self._input_cvimg = None
+        self._is_blue_detected = True
         self._can_proceed = False
         
         self._yolo_traffic_light = YOLODetector(weight_path=self._param.weight_path, conf_th_crosswalk=self._param.confidence_threshold_crosswalk)
@@ -105,10 +113,13 @@ class TrafficlightDetector:
             confidence_threshold_blue=rospy.get_param("~confidence_threshold_blue", 0.3),
             confidence_threshold_red=rospy.get_param("~confidence_threshold_red", 0.3),
             confidence_threshold_crosswalk=rospy.get_param("~confidence_threshold_crosswalk", 0.5),
-            count_threshold_blue=rospy.get_param("~count_threshold_blue", 20),
-            count_threshold_red=rospy.get_param("~count_threshold_red", 30),
+            count_threshold_blue_detect_blue=rospy.get_param("~count_threshold_blue_detect_blue", 20),
+            count_threshold_red_detect_blue=rospy.get_param("~count_threshold_red_detect_blue", 30),
+            count_threshold_blue_detect_red=rospy.get_param("~count_threshold_blue_detect_red", 20),
+            count_threshold_red_detect_red=rospy.get_param("~count_threshold_red_detect_red", 30),
             count_threshold_crosswalk=rospy.get_param("~count_threshold_crosswalk", 40),
             count_threshold_no_vehicle=rospy.get_param("~count_threshold_no_vehicle", 5),
+            count_threshold_allowed_time=rospy.get_param("~count_threshold_allowed_time", 30),
             start_brightness_judge_threshold=rospy.get_param(
                 "~do_brightness_judge_count", 10
             ),
@@ -145,37 +156,72 @@ class TrafficlightDetector:
         else:
             self._img_pub.publish(msg)
                 
+    def _reset_count_traffic_light(self) -> None:
+        self._count.blue = 0
+        self._count.red = 0
+        self._count.allowed_time = 0
+    
     def _run(self, _) -> None:
         # initialize when the task type is not traffic light
         if not self._request_flag:
-            self._count.blue = 0
-            self._count.red = 0
+            self._reset_count_traffic_light()
+            self._count.to_start_brightness_judge = 0
+            self._count.no_vehicle_on_crosswalk = 0
+            self._crosswalk_detector.reset_buffer()
         
         # publish flag if a blue is detected above a threshold value after
         #   a red is detected above a threshold value
         elif self._input_cvimg is not None:
             signal = self._box_recognition._judge_signal(input_cvimg=self._input_cvimg, count=self._count)
             
-            if signal == "signal_red":
-                self._count.red += 1
-            elif (
-                signal == "signal_blue"
-                and self._count.red > self._param.count_threshold_red
-            ):
-                self._count.blue += 1
+            # traffic light: red -> blue
+            if self._is_blue_detected is True:
+                if signal == "signal_red":
+                    self._count.red += 1
+                elif (
+                    signal == "signal_blue"
+                    and self._count.red > self._param.count_threshold_red_detect_blue
+                ):
+                    self._count.blue += 1
+            # traffic light: blue -> red
+            else:
+                if signal == "signal_blue":
+                    self._count.blue += 1
+                elif (
+                    signal == "signal_red"
+                    and self._count.blue > self._param.count_threshold_blue_detect_red
+                ):
+                    self._count.red += 1
 
-             # Check for crosswalk overlap
+            # Check for crosswalk overlap
             crosswalk_th_img = self._crosswalk_detector._cumulative_crosswalk(input_cvimg=self._input_cvimg)
 
+            # Check if the vehicle is not on the crosswalk
             if self._crosswalk_detector._check_overlap_with_crosswalk(input_cvimg=self._input_cvimg, thresholded_img=crosswalk_th_img):
                 self._count.no_vehicle_on_crosswalk += 1
             else:
                 self._count.no_vehicle_on_crosswalk = 0
                 rospy.logwarn("Vehicle on the crosswalk")
-
-            if self._count.blue > self._param.count_threshold_blue:
+            
+            if self._is_blue_detected is True:
+                if self._count.blue > self._param.count_threshold_blue_detect_blue: # DETECT BLUE(red->blue)
+                    self._is_blue_detected = False
+                    self._reset_count_traffic_light() # Reset traffic light count for new detection cycle
+                    rospy.loginfo("DETECT Blue")
+            else:
+                if self._count.red > self._param.count_threshold_red_detect_red: # DETECT RED(blue->red)
+                    self._is_blue_detected = True
+                    self._reset_count_traffic_light() # Reset traffic light count for new detection cycle
+                    rospy.loginfo("DETECT Red")
+                
+            if self._is_blue_detected is False: # In case of Blue signal
                 if self._count.no_vehicle_on_crosswalk > self._param.count_threshold_no_vehicle:
-                    self._can_proceed = True
+                    if self._count.allowed_time < self._param.count_threshold_allowed_time:
+                        self._can_proceed = True
+                    else:
+                        rospy.logwarn("Allowed time exceeded. Not proceeding.")
+                else:
+                    self._count.allowed_time += 1
             
             if self._can_proceed:
                 if self._param.debug:
