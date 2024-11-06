@@ -36,16 +36,16 @@ class Param:
     def _print(self):
         # Print the parameters for debugging
         rospy.loginfo(f"hz: {self.hz}")
-        rospy.loginfo(f"confidence_threshold_blue: {self.confidence_th_blue}")
-        rospy.loginfo(f"confidence_threshold_red: {self.confidence_th_red}")
-        rospy.loginfo(f"confidence_threshold_crosswalk: {self.confidence_th_crosswalk}")
-        rospy.loginfo(f"count_threshold_blue_detect_blue: {self.count_th_blue_while_red_detected}")
-        rospy.loginfo(f"count_threshold_red_detect_blue: {self.count_th_red_while_red_detected}")
-        rospy.loginfo(f"count_threshold_blue_detect_red: {self.count_th_blue_while_blue_detected}")
-        rospy.loginfo(f"count_threshold_red_detect_red: {self.count_th_red_while_blue_detected}")
-        rospy.loginfo(f"count_threshold_crosswalk: {self.count_th_crosswalk}")
-        rospy.loginfo(f"count_threshold_no_vehicle: {self.count_th_no_vehicle}")
-        rospy.loginfo(f"count_threshold_allowed_time: {self.count_th_allowed_time}")
+        rospy.loginfo(f"confidence_th_blue: {self.confidence_th_blue}")
+        rospy.loginfo(f"confidence_th_red: {self.confidence_th_red}")
+        rospy.loginfo(f"confidence_th_crosswalk: {self.confidence_th_crosswalk}")
+        rospy.loginfo(f"count_th_blue_while_red_detected: {self.count_th_blue_while_red_detected}")
+        rospy.loginfo(f"count_th_red_while_red_detected: {self.count_th_red_while_red_detected}")
+        rospy.loginfo(f"count_th_blue_while_blue_detected: {self.count_th_blue_while_blue_detected}")
+        rospy.loginfo(f"count_th_red_while_blue_detected: {self.count_th_red_while_blue_detected}")
+        rospy.loginfo(f"count_th_crosswalk: {self.count_th_crosswalk}")
+        rospy.loginfo(f"count_th_no_vehicle: {self.count_th_no_vehicle}")
+        rospy.loginfo(f"count_th_allowed_time: {self.count_th_allowed_time}")
         rospy.loginfo(
             f"start_brightness_judge_threshold: {self.start_brightness_judge_threshold}"
         )
