@@ -6,10 +6,10 @@
     <arg name="confidence_th_red" default="0.30"/>
     <arg name="confidence_th_crosswalk" default="0.60"/>
     <arg name="min_conf" default="0.00001"/>
-    <arg name="count_th_blue_detect_blue" default="20"/>
-    <arg name="count_th_red_detect_blue" default="20"/>
-    <arg name="count_th_blue_detect_red" default="40"/>
-    <arg name="count_th_red_detect_red" default="20"/>
+    <arg name="count_th_blue_while_red_detected" default="20"/>
+    <arg name="count_th_red_while_red_detected" default="20"/>
+    <arg name="count_th_blue_while_blue_detected" default="40"/>
+    <arg name="count_th_red_while_blue_detected" default="20"/>
     <arg name="count_th_crosswalk" default="40"/>
     <arg name="count_th_no_vehicle" default="5"/>
     <arg name="count_th_allowed_time" default="50"/>
@@ -19,17 +19,17 @@
 
     <node name="traffic_light_detector" pkg="traffic_light_detector" type="traffic_light_detector.py" cwd="node" output="screen">
         <remap from="/CompressedImage" to="$(arg CompressedImage)"/>
-        <param name="confidence_threshold_blue" value="$(arg confidence_th_blue)"/>
-        <param name="confidence_threshold_red" value="$(arg confidence_th_red)"/>
-        <param name="confidence_threshold_crosswalk" value="$(arg confidence_th_crosswalk)"/>
+        <param name="confidence_th_blue" value="$(arg confidence_th_blue)"/>
+        <param name="confidence_th_red" value="$(arg confidence_th_red)"/>
+        <param name="confidence_th_crosswalk" value="$(arg confidence_th_crosswalk)"/>
         <param name="min_conf" value="$(arg min_conf)"/>
-        <param name="count_threshold_blue_detect_blue" value="$(arg count_th_blue_detect_blue)"/>
-        <param name="count_threshold_red_detect_blue" value="$(arg count_th_red_detect_blue)"/>
-        <param name="count_threshold_blue_detect_red" value="$(arg count_th_blue_detect_red)"/>
-        <param name="count_threshold_red_detect_red" value="$(arg count_th_red_detect_red)"/>
-        <param name="count_threshold_crosswalk" value="$(arg count_th_crosswalk)"/>
-        <param name="count_threshold_no_vehicle" value="$(arg count_th_no_vehicle)"/>
-        <param name="count_threshold_allowed_time" value="$(arg count_th_allowed_time)"/>
+        <param name="count_th_blue_while_red_detected" value="$(arg count_th_blue_while_red_detected)"/>
+        <param name="count_th_red_while_red_detected" value="$(arg count_th_red_while_red_detected)"/>
+        <param name="count_th_blue_while_blue_detected" value="$(arg count_th_blue_while_blue_detected)"/>
+        <param name="count_th_red_while_blue_detected" value="$(arg count_th_red_while_blue_detected)"/>
+        <param name="count_th_crosswalk" value="$(arg count_th_crosswalk)"/>
+        <param name="count_th_no_vehicle" value="$(arg count_th_no_vehicle)"/>
+        <param name="count_th_allowed_time" value="$(arg count_th_allowed_time)"/>
         <param name="weight_path" value="$(arg weight_path)"/>
         <param name="weight_path_seg" value="$(arg weight_path_seg)"/>
         <param name="debug" value="$(arg debug)"/>

@@ -18,7 +18,7 @@ class CrosswalkDetector:
             raise ValueError("Cumulative image has not been initialized.")
 
         # Returns binary mask where True (1) indicates pixels exceeding the threshold
-        thresholded_img = (self._cumulative_crosswalk_img >= self._param.count_threshold_crosswalk).astype(np.uint8)
+        thresholded_img = (self._cumulative_crosswalk_img >= self._param.count_th_crosswalk).astype(np.uint8)
         
         return thresholded_img
     
@@ -50,8 +50,8 @@ class CrosswalkDetector:
         # Detect overlap between vehicles and crosswalk areas
         overlap = cv2.bitwise_and(vehicle_img, thresholded_img)
         
-        # Returns True if no overlap, otherwise False
+        # Returns False if no overlap, otherwise True
         if np.any(overlap):
-            return False
-        else:
             return True
+        else:
+            return False
