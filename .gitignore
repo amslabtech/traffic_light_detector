@@ -2,3 +2,4 @@ weights/*
 !.gitkeep
 scripts/tools/__pycache__/
 build/
+.mypy_cache/

@@ -3,22 +3,26 @@ import numpy as np
 import rospy
 from cv_bridge import CvBridge
 
+
 class BoxRecognition:
-    def __init__(self, yolo_detector, backlight_correction, img_pub, box_pub):
+    def __init__(self, yolo_detector, backlight_correction, param, img_pub, box_pub):
         self._stored_boxes = []
         self._yolo_detecter = yolo_detector
         self._backlight_correction = backlight_correction
+        self._param = param
         self._img_pub = img_pub
         self._box_pub = box_pub
     
     def _draw_box(self, img: np.ndarray, box: tuple, color: tuple = (0, 0, 0)) -> np.ndarray:
-        thickness = 4  # バウンディングボックスの線の太さ
+        # Draws a bounding box on the image with specified thickness and color
+        thickness = 4
         x1, y1, x2, y2 = box[0]
         cv2.rectangle(img, (x1, y1), (x2, y2), color, thickness)
         return img
 
     def _draw_boxes(self, img: np.ndarray, boxes: list, color: tuple = (0, 0, 0)) -> np.ndarray:
-        thickness = 2  # バウンディングボックスの線の太さ
+        # Draws multiple bounding boxes
+        thickness = 2
         for box in boxes:
             x1, y1, x2, y2 = box[0]
             cv2.rectangle(img, (x1, y1), (x2, y2), color, thickness)
@@ -43,6 +47,7 @@ class BoxRecognition:
         self._img_pub.publish(result_msg)
 
     def _contain_yellow_px(self, box: tuple, img: np.ndarray) -> bool:
+        # Checks if yellow pixels are within the specified box
         lower_yellow_h = 23
         upper_yellow_h = 30
         x1, y1, x2, y2 = box[0]
@@ -61,6 +66,7 @@ class BoxRecognition:
             return False
 
     def _within_appropriate_aspect(self, box: tuple) -> bool:
+        # Checks if the box aspect ratio is within the specified range
         x1, y1, x2, y2 = box[0]
         h = y2 - y1
         w = x2 - x1
@@ -71,6 +77,7 @@ class BoxRecognition:
             return False
 
     def _store_box(self, yolo_output) -> None:
+        # Stores detected boxes that meet specific criteria
         tmp_boxes = []
         valid_box = None
 
@@ -100,7 +107,7 @@ class BoxRecognition:
         self._stored_boxes.sort(key=lambda x: x[1], reverse=True)
 
     def _brightness_judge(self, yolo_output) -> tuple:
-      
+        # Determines the signal color based on brightness within a detected box
         signal = None
         output = None
 
@@ -136,11 +143,11 @@ class BoxRecognition:
 
         return signal, output
     
-    def _judge_signal(self, input_cvimg: np.ndarray, param, count) -> str:
-
+    def _judge_signal(self, input_cvimg: np.ndarray, count) -> str:
+        # Evaluates the traffic signal status based on YOLO output and brightness
         signal = None
         visualize_cvimg = None
-        input_img = self._backlight_correction._preprocess(input_cvimg, param)
+        input_img = self._backlight_correction._preprocess(input_cvimg, self._param)
         yolo_output, max_conf, max_conf_class = self._yolo_detecter._traffic_light_yolo(input_img)
 
         if max_conf_class is not None:
@@ -149,10 +156,10 @@ class BoxRecognition:
 
             if (
                 max_conf_class == 16
-                and max_conf > param.conf_threshold_blue
+                and max_conf > self._param.confidence_th_blue
             ) or (
                 max_conf_class == 15
-                and max_conf > param.conf_threshold_red
+                and max_conf > self._param.confidence_th_red
             ):
 
                 signal = yolo_output.names.get(max_conf_class)
@@ -161,7 +168,7 @@ class BoxRecognition:
 
             elif (
                 count.to_start_brightness_judge
-                < param.start_brightness_judge_threshold
+                < self._param.start_brightness_judge_threshold
             ):
                 count.to_start_brightness_judge += 1
                 visualize_cvimg = yolo_output[0].plot()
