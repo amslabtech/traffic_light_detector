@@ -12,6 +12,9 @@ class BoxRecognition:
         self._param = param
         self._img_pub = img_pub
         self._box_pub = box_pub
+        
+    def reset_buffer(self):
+        self._stored_boxes = []
     
     def _draw_box(self, img: np.ndarray, box: tuple, color: tuple = (0, 0, 0)) -> np.ndarray:
         # Draws a bounding box on the image with specified thickness and color

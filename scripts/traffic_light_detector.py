@@ -171,6 +171,7 @@ class TrafficlightDetector:
             self._count = Count()
             self._state = State()
             self._crosswalk_detector.reset_buffer()
+            self._box_recognition.reset_buffer()
 
         # publish flag if a blue is detected above a threshold value after
         #   a red is detected above a threshold value
