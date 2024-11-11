@@ -4,6 +4,7 @@ from dataclasses import dataclass
 
 import rospy
 import torch
+import numpy as np
 from cv_bridge import CvBridge
 from sensor_msgs.msg import CompressedImage
 from std_srvs.srv import SetBool, SetBoolResponse
@@ -63,6 +64,11 @@ class Count:
     no_vehicle_on_crosswalk: int = 0
     allowed_time: int = 0
 
+@dataclass
+class State:
+    input_cvimg: np.ndarray = None
+    can_proceed: bool = False
+    is_detecting_blue: bool = True
 
 class TrafficlightDetector:
     def __init__(self) -> None:
@@ -84,10 +90,8 @@ class TrafficlightDetector:
 
         self._load_param()
         self._count = Count()
+        self._state = State()
         self._request_flag = self._param.debug
-        self._input_cvimg = None
-        self._is_detecting_blue = True
-        self._can_proceed = False
 
         self._yolo_traffic_light = YOLODetector(weight_path=self._param.weight_path, conf_th_crosswalk=self._param.confidence_th_crosswalk)
         self._yolo_crosswalk = YOLODetector(weight_path=self._param.weight_path_seg, conf_th_crosswalk=self._param.confidence_th_crosswalk)
@@ -152,7 +156,7 @@ class TrafficlightDetector:
 
     def _image_callback(self, msg: CompressedImage) -> None:
         if self._request_flag and len(msg.data) != 0:
-            self._input_cvimg = CvBridge().compressed_imgmsg_to_cv2(msg)
+            self._state.input_cvimg = CvBridge().compressed_imgmsg_to_cv2(msg)
         else:
             self._img_pub.publish(msg)
 
@@ -164,20 +168,18 @@ class TrafficlightDetector:
     def _run(self, _) -> None:
         # initialize when the task type is not traffic light
         if not self._request_flag:
-            self._reset_count_traffic_light()
-            self._count.to_start_brightness_judge = 0
-            self._count.no_vehicle_on_crosswalk = 0
+            self._count = Count()
+            self._state = State()
             self._crosswalk_detector.reset_buffer()
-            self._can_proceed = False
-            self._is_detecting_blue = True
+            self._box_recognition.reset_buffer()
 
         # publish flag if a blue is detected above a threshold value after
         #   a red is detected above a threshold value
-        elif self._input_cvimg is not None:
-            signal = self._box_recognition._judge_signal(input_cvimg=self._input_cvimg, count=self._count)
+        elif self._state.input_cvimg is not None:
+            signal = self._box_recognition._judge_signal(input_cvimg=self._state.input_cvimg, count=self._count)
 
             # traffic light: red -> blue
-            if self._is_detecting_blue is True:
+            if self._state.is_detecting_blue is True:
                 if signal == "signal_red":
                     self._count.red += 1
                 elif (
@@ -196,36 +198,36 @@ class TrafficlightDetector:
                     self._count.red += 1
 
             # Check for crosswalk overlap
-            crosswalk_th_img = self._crosswalk_detector._cumulative_crosswalk(input_cvimg=self._input_cvimg)
+            crosswalk_th_img = self._crosswalk_detector._cumulative_crosswalk(input_cvimg=self._state.input_cvimg)
 
             # Check if the vehicle is not on the crosswalk
-            if self._crosswalk_detector._check_overlap_with_crosswalk(input_cvimg=self._input_cvimg, thresholded_img=crosswalk_th_img) is False:
+            if self._crosswalk_detector._check_overlap_with_crosswalk(input_cvimg=self._state.input_cvimg, thresholded_img=crosswalk_th_img) is False:
                 self._count.no_vehicle_on_crosswalk += 1
             else:
                 self._count.no_vehicle_on_crosswalk = 0
                 rospy.logwarn("Vehicle on the crosswalk")
 
-            if self._is_detecting_blue is True:
+            if self._state.is_detecting_blue is True:
                 if self._count.blue > self._param.count_th_blue_while_red_detected: # DETECT BLUE(red->blue)
-                    self._is_detecting_blue = False
+                    self._state.is_detecting_blue = False
                     self._reset_count_traffic_light() # Reset traffic light count for new detection cycle
                     rospy.loginfo("DETECT Blue")
             else:
                 if self._count.red > self._param.count_th_red_while_blue_detected: # DETECT RED(blue->red)
-                    self._is_detecting_blue = True
+                    self._state.is_detecting_blue = True
                     self._reset_count_traffic_light() # Reset traffic light count for new detection cycle
                     rospy.loginfo("DETECT Red")
 
-            if self._is_detecting_blue is False: # In case of Blue signal
+            if self._state.is_detecting_blue is False: # In case of Blue signal
                 if self._count.no_vehicle_on_crosswalk > self._param.count_th_no_vehicle:
                     if self._count.allowed_time < self._param.count_th_allowed_time:
-                        self._can_proceed = True
+                        self._state.can_proceed = True
                     else:
                         rospy.logwarn("Allowed time exceeded. Not proceeding.")
                 else:
                     self._count.allowed_time += 1
 
-            if self._can_proceed:
+            if self._state.can_proceed:
                 if self._param.debug:
                     rospy.logwarn("cross traffic light")
                     self._request_flag = False
