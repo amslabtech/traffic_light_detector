@@ -94,13 +94,13 @@ class TrafficlightDetector:
         self._request_flag = self._param.debug
 
         self._yolo_traffic_light = YOLODetector(weight_path=self._param.weight_path, conf_th_crosswalk=self._param.confidence_th_crosswalk)
-        self._yolo_crosswalk = YOLODetector(weight_path=self._param.weight_path_seg, conf_th_crosswalk=self._param.confidence_th_crosswalk)
+        self._yolo_crosswalk_and_vehicle = YOLODetector(weight_path=self._param.weight_path_seg, conf_th_crosswalk=self._param.confidence_th_crosswalk)
         self._backlight_correction = BacklightCorrection()
         self._box_recognition = BoxRecognition(
             self._yolo_traffic_light, self._backlight_correction,
             self._param, self._img_pub, self._box_pub
         )
-        self._crosswalk_detector = CrosswalkDetector(self._yolo_crosswalk, self._param)
+        self._crosswalk_detector = CrosswalkDetector(self._yolo_crosswalk_and_vehicle, self._param)
 
         # cuda setting
         torch.cuda.set_device(0)
@@ -198,10 +198,10 @@ class TrafficlightDetector:
                     self._count.red += 1
 
             # Check for crosswalk overlap
-            crosswalk_th_img = self._crosswalk_detector._cumulative_crosswalk(input_cvimg=self._state.input_cvimg)
+            crosswalk_th_img, vehicle_img = self._crosswalk_detector._cumulative_crosswalk(input_cvimg=self._state.input_cvimg)
 
             # Check if the vehicle is not on the crosswalk
-            if self._crosswalk_detector._check_overlap_with_crosswalk(input_cvimg=self._state.input_cvimg, thresholded_img=crosswalk_th_img) is False:
+            if self._crosswalk_detector._check_overlap_with_crosswalk(vehicle_img=vehicle_img, thresholded_img=crosswalk_th_img) is False:
                 self._count.no_vehicle_on_crosswalk += 1
             else:
                 self._count.no_vehicle_on_crosswalk = 0

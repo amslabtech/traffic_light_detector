@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+from typing import Tuple
 
 
 class CrosswalkDetector:
@@ -22,7 +23,7 @@ class CrosswalkDetector:
 
         return thresholded_img
 
-    def _cumulative_crosswalk(self, input_cvimg: np.ndarray = None) -> np.ndarray:
+    def _cumulative_crosswalk(self, input_cvimg: np.ndarray = None) -> Tuple[np.ndarray, np.ndarray]:
         # Cumulatively detects crosswalks by analyzing each frame's crosswalk mask.
 
         if  self._cumulative_crosswalk_img is None:
@@ -31,7 +32,7 @@ class CrosswalkDetector:
             self._cumulative_crosswalk_img = np.zeros((height, width), dtype=np.uint8)
 
         # YOLO detection for crosswalks; returns a mask with detected crosswalk regions
-        crosswalk_img = self._yolo_detector._crosswalk_yolo(input_cvimg)
+        crosswalk_img, vehicle_img = self._yolo_detector._crosswalk_and_vehicle_yolo(input_cvimg)
 
         if crosswalk_img is not None:
             # Accumulate crosswalk detections pixel-wise
@@ -44,11 +45,10 @@ class CrosswalkDetector:
             height, width = input_cvimg.shape[:2:]
             thresholded_img = np.ones((height, width), dtype=np.uint8)
 
-        return thresholded_img
+        return thresholded_img, vehicle_img
 
-    def _check_overlap_with_crosswalk(self, input_cvimg: np.ndarray, thresholded_img: np.ndarray) -> bool:
+    def _check_overlap_with_crosswalk(self, vehicle_img: np.ndarray, thresholded_img: np.ndarray) -> bool:
         # Checks for overlapping pixels between detected crosswalk areas and vehicles.
-        vehicle_img = self._yolo_detector._vehicle_yolo(input_cvimg)
 
         # Detect overlap between vehicles and crosswalk areas
         overlap = cv2.bitwise_and(vehicle_img, thresholded_img)
