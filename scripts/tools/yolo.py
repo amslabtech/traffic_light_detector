@@ -27,7 +27,7 @@ class YOLODetector:
 
     def _crosswalk_and_vehicle_yolo(self, input_img: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         # Run YOLO inference once, filter by crosswalk and vehicle classes
-        yolo_output = self._model(input_img, classes=[1, 2, 3, 4, 5, 6, 13], conf=0.8, verbose=False)
+        yolo_output = self._model(input_img, classes=[1, 2, 3, 4, 5, 6, 13], conf=self._conf_th_crosswalk, verbose=False)
             
         # Return blank images if no detections
         if not yolo_output or len(yolo_output[0]) == 0:
@@ -54,7 +54,6 @@ class YOLODetector:
                 # Iterate through the class IDs of each detection box
                 for cls_id in detection.boxes.cls:
                     cls_id = int(cls_id.item())  # Convert tensor to int
-                    #print(cls_id)
                     if cls_id == 13:  # Crosswalk class
                         crosswalk_img = cv2.bitwise_or(crosswalk_img, mask)
                     elif cls_id in [1, 2, 3, 4, 5, 6]:  # Vehicle-related classes
