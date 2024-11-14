@@ -4,9 +4,9 @@
     <arg name="CompressedImage" default="/CompressedImage"/>
     <arg name="confidence_th_blue" default="0.10"/>
     <arg name="confidence_th_red" default="0.30"/>
-    <arg name="confidence_th_crosswalk" default="0.60"/>
+    <arg name="confidence_th_crosswalk" default="0.80"/>
     <arg name="min_conf" default="0.00001"/>
-    <arg name="count_th_blue_while_red_detected" default="20"/>
+    <arg name="count_th_blue_while_red_detected" default="10"/>
     <arg name="count_th_red_while_red_detected" default="20"/>
     <arg name="count_th_blue_while_blue_detected" default="40"/>
     <arg name="count_th_red_while_blue_detected" default="20"/>
@@ -16,6 +16,7 @@
     <arg name="weight_path" default="$(find traffic_light_detector)/weights/vidvipo_yolov8x_2023-05-19.pt"/>
     <arg name="weight_path_seg" default="$(find traffic_light_detector)/weights/vidvips_yolov8m-seg_2023-09-20.pt"/>
     <arg name="debug" default="false"/>
+    <arg name="debug_yolo" default="false"/>    
 
     <node name="traffic_light_detector" pkg="traffic_light_detector" type="traffic_light_detector.py" cwd="node" output="screen">
         <remap from="/CompressedImage" to="$(arg CompressedImage)"/>
@@ -33,5 +34,6 @@
         <param name="weight_path" value="$(arg weight_path)"/>
         <param name="weight_path_seg" value="$(arg weight_path_seg)"/>
         <param name="debug" value="$(arg debug)"/>
+        <param name="debug_yolo" value="$(arg debug_yolo)"/>
     </node>
 </launch>
