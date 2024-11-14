@@ -6,8 +6,9 @@ from typing import Tuple
 
 
 class YOLODetector:
-    def __init__(self, weight_path: str, conf_th_crosswalk: float) -> None:
+    def __init__(self, weight_path: str, conf_th_crosswalk: float, debug_yolo: bool) -> None:
         self._conf_th_crosswalk = conf_th_crosswalk
+        self._debug_yolo = debug_yolo
         self._model = YOLO(weight_path)
     
     def _traffic_light_yolo(self, input_img: np.ndarray) -> tuple: 
@@ -16,7 +17,7 @@ class YOLODetector:
         output = None
         # self._model() returns list of
         #   class:ultralytics.engine.results.Results
-        yolo_output = self._model(input_img, classes=[15, 16], conf=0, verbose=False)
+        yolo_output = self._model(input_img, classes=[15, 16], conf=0, verbose=self._debug_yolo)
 
         if len(yolo_output[0]) != 0: # Checks if there are any detections
             max_conf = yolo_output[0].boxes[0].conf.item()
@@ -27,7 +28,7 @@ class YOLODetector:
 
     def _crosswalk_and_vehicle_yolo(self, input_img: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         # Run YOLO inference once, filter by crosswalk and vehicle classes
-        yolo_output = self._model(input_img, classes=[1, 2, 3, 4, 5, 6, 13], conf=self._conf_th_crosswalk, verbose=False)
+        yolo_output = self._model(input_img, classes=[1, 2, 3, 4, 5, 6, 13], conf=self._conf_th_crosswalk, verbose=self._debug_yolo)
             
         # Return blank images if no detections
         if not yolo_output or len(yolo_output[0]) == 0:

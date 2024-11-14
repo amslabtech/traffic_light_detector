@@ -33,6 +33,7 @@ class Param:
     weight_path: str
     weight_path_seg: str
     debug: bool
+    debug_yolo: bool
 
     def _print(self):
         # Print the parameters for debugging
@@ -54,6 +55,7 @@ class Param:
         rospy.loginfo(f"weight_path: {self.weight_path}")
         rospy.loginfo(f"weight_path_seg: {self.weight_path_seg}")
         rospy.loginfo(f"debug: {self.debug}")
+        rospy.loginfo(f"debug_yolo: {self.debug_yolo}")
 
 
 @dataclass
@@ -93,8 +95,8 @@ class TrafficlightDetector:
         self._state = State()
         self._request_flag = self._param.debug
 
-        self._yolo_traffic_light = YOLODetector(weight_path=self._param.weight_path, conf_th_crosswalk=self._param.confidence_th_crosswalk)
-        self._yolo_crosswalk_and_vehicle = YOLODetector(weight_path=self._param.weight_path_seg, conf_th_crosswalk=self._param.confidence_th_crosswalk)
+        self._yolo_traffic_light = YOLODetector(weight_path=self._param.weight_path, conf_th_crosswalk=self._param.confidence_th_crosswalk, debug_yolo=self._param.debug_yolo)
+        self._yolo_crosswalk_and_vehicle = YOLODetector(weight_path=self._param.weight_path_seg, conf_th_crosswalk=self._param.confidence_th_crosswalk, debug_yolo=self._param.debug_yolo)
         self._backlight_correction = BacklightCorrection()
         self._box_recognition = BoxRecognition(
             self._yolo_traffic_light, self._backlight_correction,
@@ -131,6 +133,7 @@ class TrafficlightDetector:
             weight_path=rospy.get_param("~weight_path", ""),
             weight_path_seg=rospy.get_param("~weight_path_seg", ""),
             debug=rospy.get_param("~debug", False),
+            debug_yolo=rospy.get_param("~debug_yolo", True)
         )
         self._param._print()
 
